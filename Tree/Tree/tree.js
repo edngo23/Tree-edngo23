@@ -1,10 +1,11 @@
 import {defs, tiny} from './examples/common.js';
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Texture, Scene
 } = tiny;
 
 //Assignment 2
+/*
 class Cube extends Shape {
     constructor() {
         super("position", "normal",);
@@ -22,6 +23,7 @@ class Cube extends Shape {
             14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22);
     }
 }
+
 
 class Cube_Outline extends Shape {
     constructor() {
@@ -78,13 +80,14 @@ class Cube_Single_Strip extends Shape {
             14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22);
     }
 }
+*/
 
-
+/*
 class Base_Scene extends Scene {
     /**
      *  **Base_scene** is a Scene that can be added to any display canvas.
      *  Setup the shapes, materials, camera, and lighting here.
-     */
+
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
@@ -123,18 +126,22 @@ class Base_Scene extends Scene {
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
     }
 }
+*/
 
-export class Tree extends Base_Scene { //Should be Scene for Assignment 3
+
+export class Tree extends Scene { //Should be Scene for Assignment 3
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
 
         //Assignment 2
+        /*
         this.set_colors();
         this.is_outline = false;
         this.is_still = false;
+        */
 
-        /*
+
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             torus: new defs.Torus(15, 15),
@@ -149,10 +156,21 @@ export class Tree extends Base_Scene { //Should be Scene for Assignment 3
 
             sphere2: new (defs.Subdivision_Sphere.prototype.make_flat_shaded_version())(2),
             sphere3: new defs.Subdivision_Sphere(3),
+            leafTest: new defs.Tetrahedron(true),
+            cylinder      : new defs.Capped_Cylinder( 4, 12, [[0,1],[0,1]] ),
+            cone        : new defs.Closed_Cone( 4, 20, [[0,1],[0,1]] ),
+            skybox: new defs.Subdivision_Sphere(4),
+            ground: new defs.Capped_Cylinder(100,100,[[0,2],[0,1]]),
+
         };
 
         // *** Materials
+        const textured = new defs.Textured_Phong(1);
         this.materials = {
+            trunk: new Material(new Gouraud_Shader(),
+                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
+            tree: new Material(new Gouraud_Shader(),
+                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
             test: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
             test2: new Material(new Gouraud_Shader(),
@@ -176,13 +194,19 @@ export class Tree extends Base_Scene { //Should be Scene for Assignment 3
                 {ambient: 0, diffusivity: 0.8, specularity: 0.8, color: hex_color("#2121ff")}),
             moon_4: new Material(new defs.Phong_Shader(),
                 {ambient: 0, diffusivity: 1, specularity: 1, color: hex_color("#d11dc8")}),
+            leaf_color_warm: new Material(new defs.Phong_Shader(),
+                {ambient:0, diffusivity: 1, specularity: 1, color: hex_color("#00FF00")}),
+            sky: new Material(textured,
+                {ambient:1, specularity: 0.2, texture: new Texture("assets/sunsetBackgroundSquare.png"), color: color(0,0,0,1)}),
+            ground: new Material(textured,
+                {ambient:1, specularity: 0.2, texture: new Texture("assets/groundSquare.png")}),
         }
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
-         */
     }
 
     //Assignment 2
+    /*
     set_colors() {
         // TODO:  Create a class member variable to store your cube's colors.
         // Hint:  You might need to create a member variable at somewhere to store the colors, using `this`.
@@ -219,9 +243,11 @@ export class Tree extends Base_Scene { //Should be Scene for Assignment 3
             .times(Mat4.rotation(0.05 * pi * (0.5 + 0.5 * Math.sin(angle)), 0,0,1))
             .times(Mat4.translation(1,1.5,0));
     }
+    */
 
     make_control_panel() {
         //Assignment 2
+        /*
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         this.key_triggered_button("Change Colors", ["c"], this.set_colors);
         // Add a button for controlling the scene.
@@ -233,6 +259,7 @@ export class Tree extends Base_Scene { //Should be Scene for Assignment 3
             // TODO:  Requirement 3d:  Set a flag here that will toggle your swaying motion on and off.
             this.is_still = !this.is_still;
         });
+        */
 
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         this.key_triggered_button("View solar system", ["Control", "0"], () => this.attached = () => this.initial_camera_location);
@@ -249,7 +276,7 @@ export class Tree extends Base_Scene { //Should be Scene for Assignment 3
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
-        /*
+
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
@@ -267,33 +294,92 @@ export class Tree extends Base_Scene { //Should be Scene for Assignment 3
         const yellow = hex_color("#fac91a");
 
         const sun_rad = Math.sin(2 * Math.PI * t/10) + 2;
-        const light_color = color(1, (sun_rad-1)/2, (sun_rad-1)/2, 1);
+        const light_color = color(1, 1, 1, 1);
 
-        const light_position = vec4(0, 0, 0, 1);
+        let light_position;
         // The parameters of the Light are: position, color, size
-        program_state.lights = [new Light(light_position, light_color, 10**sun_rad)];
+        let model_transform = Mat4.identity();
+        //this.shapes.leafTest.draw(context, program_state, model_transform, this.materials.leaf_color_warm);
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 3 and 4)
-        let model_transform = Mat4.identity();
-        let sun_transform = model_transform.times(Mat4.scale(sun_rad,sun_rad,sun_rad));
+
+        //let sun_transform = model_transform.times(Mat4.scale(sun_rad,sun_rad,sun_rad));
+        // TODO: Draw Leaf
+
+
+        // TODO: create a day cycle (i.e have light source move from left to right)
+        // TODO: Create a year cycle, with a year being 20 days
+        // TODO: Create seasons, 5 days for each season, and it transitions (i.e summer- blue background/white light source, fall - orange background/white light source (leaves color))
+
+        // Leaves - triangular prism shape with gouroud shading
+        // Tree and connecting to leaves, no idea.
 
         //Sun
-        this.shapes.sphere4.draw(context, program_state, sun_transform, this.materials.sun.override({color: light_color}));
+        //this.shapes.sphere4.draw(context, program_state, sun_transform, this.materials.sun.override({color: light_color}));
 
+        //Moving Sun
+        let sun_transform;
+        sun_transform = model_transform.times(Mat4.translation(18-(3*t)%36, 7, 0));
+        light_position = vec4(18-(3*t)%36, 7, 0, 1);
+        program_state.lights = [new Light(light_position, light_color, 100)];
+
+        // Drawing Background
+        let sky_transform = model_transform.times(Mat4.scale(60, 60, 60));
+        let ground_transform = model_transform.times(Mat4.scale(100, -1, 1)).times(Mat4.translation(0,0,12));
+        this.shapes.sphere4.draw(context, program_state, sun_transform, this.materials.sun.override({color: yellow}));
+        this.shapes.ground.draw(context, program_state, ground_transform, this.materials.ground);
+        this.shapes.skybox.draw(context, program_state, sky_transform, this.materials.sky);
+
+        //Christmas Tree
+        for (let j = 0; j < 3; ++j) {
+            let trunk_transform = Mat4.identity();
+            trunk_transform = trunk_transform.times(Mat4.translation(j*10, -7.5 - j, j * -2.5)).times(Mat4.rotation(1.1, 1, 0, 0)).times(Mat4.scale(1, 1, 8))
+            this.shapes.cylinder.draw(context, program_state, trunk_transform, this.materials.trunk.override({color: color(0.4313, 0.15, 0.05, 1)}));
+            //Tree Cone
+
+            let init_z = -3;
+            for (let i = 0; i < 3; i++) {
+                let cone_transform = Mat4.identity();
+                cone_transform = cone_transform.times(Mat4.translation(0, -2, 0))
+                    .times(Mat4.rotation(-2.05, 1, 0, 0))
+                    .times(Mat4.translation(j*10, (j+1)*2.5, init_z + i * 2.25))
+                    .times(Mat4.scale(5 - i, 5 - i, 2))
+                this.shapes.cone.draw(context, program_state, cone_transform, this.materials.tree.override({color: color(0.133, 0.545, 0.133, 1)}));
+            }
+        }
+
+        for (let j = 1; j < 3; ++j) {
+            let trunk_transform = Mat4.identity();
+            trunk_transform = trunk_transform.times(Mat4.translation(j*-10, -7.5 -j , j * -2.5)).times(Mat4.rotation(1.1, 1, 0, 0)).times(Mat4.scale(1, 1, 8))
+            this.shapes.cylinder.draw(context, program_state, trunk_transform, this.materials.trunk.override({color: color(0.4313, 0.15, 0.05, 1)}));
+            //Tree Cone
+
+            let init_z = -3;
+            for (let i = 0; i < 3; i++) {
+                let cone_transform = Mat4.identity();
+                cone_transform = cone_transform.times(Mat4.translation(0, -2, 0))
+                    .times(Mat4.rotation(-2.05, 1, 0, 0))
+                    .times(Mat4.translation(j*-10, (j+1)*2.5, init_z + i * 2.25))
+                    .times(Mat4.scale(5 - i, 5 - i, 2))
+                this.shapes.cone.draw(context, program_state, cone_transform, this.materials.tree.override({color: color(0.133, 0.545, 0.133, 1)}));
+            }
+        }
+
+        /*
         //Planet 1
-        let planet_1_transform = model_transform.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(5, 0, 0));
-        this.shapes.sphere2.draw(context, program_state, planet_1_transform, this.materials.planet1);
+        let planet_1_transform = model_transform;//.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(5, 0, 0));
+        //this.shapes.sphere2.draw(context, program_state, planet_1_transform, this.materials.planet1);
         this.planet_1 = planet_1_transform;
 
         //Planet 2
         let planet_2_transform = model_transform.times(Mat4.rotation(t/1.2, 0, 1, 0)).times(Mat4.translation(8, 0, 0));
         if(t%2 < 1)
         {
-            this.shapes.sphere3.draw(context, program_state, planet_2_transform, this.materials.planet2_p);
+            //this.shapes.sphere3.draw(context, program_state, planet_2_transform, this.materials.planet2_p);
         }
         else
         {
-            this.shapes.sphere3.draw(context, program_state, planet_2_transform, this.materials.planet2_g);
+            //this.shapes.sphere3.draw(context, program_state, planet_2_transform, this.materials.planet2_g);
         }
         this.planet_2 = planet_2_transform;
 
@@ -301,18 +387,20 @@ export class Tree extends Base_Scene { //Should be Scene for Assignment 3
         let planet_3_transform = model_transform.times(Mat4.rotation(t/1.5, 0,1,0)).times(Mat4.translation(11,0,0));
         this.planet_3 = planet_3_transform;
         planet_3_transform = planet_3_transform.times(Mat4.rotation(t/1.5,1,0.8,0.5));
-        this.shapes.sphere4.draw(context, program_state, planet_3_transform, this.materials.planet3);
+        // this.shapes.sphere4.draw(context, program_state, planet_3_transform, this.materials.planet3);
         //ring
         let ring_transform = planet_3_transform.times(Mat4.scale(3,3,0.1));
-        this.shapes.torus.draw(context, program_state, ring_transform, this.materials.planet3_ring);
+        // this.shapes.torus.draw(context, program_state, ring_transform, this.materials.planet3_ring);
 
         //Planet 4
         let planet_4_transform = model_transform.times(Mat4.rotation(t/1.8, 0,1,0)).times(Mat4.translation(14,0,0));
         this.planet_4 = planet_4_transform;
-        this.shapes.sphere4.draw(context, program_state, planet_4_transform, this.materials.planet4);
+        // this.shapes.sphere4.draw(context, program_state, planet_4_transform, this.materials.planet4);
         let moon_transform = planet_4_transform.times(Mat4.rotation(t, 0,1,0)).times(Mat4.translation(2,0,0));
         this.moon = moon_transform;
-        this.shapes.sphere1.draw(context, program_state, moon_transform, this.materials.moon_4);
+        // this.shapes.sphere1.draw(context, program_state, moon_transform, this.materials.moon_4);
+
+        //Set up the camera
 
         //Set up the camera
         if(this.attached)
@@ -330,9 +418,12 @@ export class Tree extends Base_Scene { //Should be Scene for Assignment 3
                 desired = desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
                 program_state.set_camera(desired);
             }
-        }
-         */
 
+
+        }
+        */
+
+        /*
         super.display(context, program_state);
         const blue = hex_color("#1a9ffa");
         let model_transform_2 = Mat4.identity();
@@ -342,6 +433,7 @@ export class Tree extends Base_Scene { //Should be Scene for Assignment 3
             model_transform_2 = model_transform_2.times(Mat4.scale(1,1.5,1))
             model_transform_2 = this.draw_box(context, program_state, model_transform_2, i);
         }
+        */
         // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper.
 
 
