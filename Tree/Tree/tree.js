@@ -164,12 +164,15 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
             cone        : new defs.Closed_Cone( 4, 20, [[0,1],[0,1]] ),
             skybox: new defs.Subdivision_Sphere(4),
             ground: new defs.Capped_Cylinder(100,100,[[0,2],[0,1]]),
+            pine_cones: new (defs.Subdivision_Sphere.prototype.make_flat_shaded_version())(2),
 
         };
 
         // *** Materials
         const textured = new defs.Textured_Phong(1);
         this.materials = {
+            pine_cones: new Material(new Gouraud_Shader(),
+                {ambient: .6, diffusivity: .6, color: hex_color("#6F4E37")}),
             trunk: new Material(new Gouraud_Shader(),
                 {ambient: .8, diffusivity: .6, color: hex_color("#ffffff")}),
             water: new Material(new Gouraud_Shader(),
@@ -295,6 +298,27 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
             this.shapes.cone.draw(context, program_state, cone_transform, this.materials.tree.override({color: hex_color(green_shade)}));
         }
     }
+
+    draw_pine_cones(context, program_state, p1x, p1y, p1z, p2x, p2y, p2z, p3x, p3y, p3z, p1angle1, p1angle2, p2angle1, p2angle2, p3angle1, p3angle2){
+        let pine_transform = Mat4.identity().times(Mat4.translation(p1x, p1y, p1z))
+            .times(Mat4.rotation(p1angle1, 1, 0, 0))
+            .times(Mat4.rotation(p1angle2, 1, 0, 0))
+            .times(Mat4.scale(0.45, 0.6,0.35));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pine_cones);
+
+        pine_transform = Mat4.identity().times(Mat4.translation(p2x, p2y, p2z))
+            .times(Mat4.rotation(p2angle1, 1, 0, 0))
+            .times(Mat4.rotation(p2angle2, 1, 0, 0))
+            .times(Mat4.scale(0.45, 0.6,0.35));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pine_cones);
+
+        pine_transform = Mat4.identity().times(Mat4.translation(p3x, p3y, p3z))
+            .times(Mat4.rotation(p3angle1, 0, 1, 0))
+            .times(Mat4.rotation(p3angle2, 1, 0, 0))
+            .times(Mat4.scale(0.45, 0.6,0.35));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pine_cones);
+    }
+
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
@@ -360,19 +384,15 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         this.shapes.cube.draw(context, program_state, water_transform, this.materials.water.override({color: hex_color("#1ca3ec")}));
 
         //Land
-        let land_transform = Mat4.identity();
-        land_transform = land_transform.times(Mat4.translation(-31, -15, -10))
-            .times(Mat4.rotation(-0.2, 1, 0, 0))
-            .times(Mat4.scale(25, 5, 20))
-        this.shapes.cube.draw(context, program_state, land_transform, this.materials.land.override({color: hex_color("#C19A6B")}));
+        for(let i = 0; i < 2; ++i) {
+            let land_transform = Mat4.identity();
+            land_transform = land_transform.times(Mat4.translation(-31 + (i * 62), -15, -10))
+                .times(Mat4.rotation(-0.2, 1, 0, 0))
+                .times(Mat4.scale(25, 5, 20))
+            this.shapes.cube.draw(context, program_state, land_transform, this.materials.land.override({color: hex_color("#C19A6B")}));
+        }
 
-        land_transform = Mat4.identity();
-        land_transform = land_transform.times(Mat4.translation(31, -15, -10))
-            .times(Mat4.rotation(-0.2, 1, 0, 0))
-            .times(Mat4.scale(25, 5, 20))
-        this.shapes.cube.draw(context, program_state, land_transform, this.materials.land.override({color: hex_color("#C19A6B")}));
-
-        //Trees
+        //Trees on left side
         this.draw_tree(context, program_state, -20, 5, 5, -1.5, "#355E3B");
         this.draw_tree(context, program_state, -8, -5, 5, 0.8, "#355E3B");
         this.draw_tree(context, program_state, -25, -15, 5, 0.4, "#355E3B");
@@ -382,6 +402,8 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         this.draw_tree(context, program_state, -15, -15, 5, 1.6, "#4F7942");
         this.draw_tree(context, program_state, -7, -20, 5, 2.3, "#87a96b");
         this.draw_tree(context, program_state, -30, -23, 5, 2.7, "#87a96b");
+
+        //Trees on Right side
         this.draw_tree(context, program_state, 20, 5, 5, -1.5, "#355E3B");
         this.draw_tree(context, program_state, 8, -5, 5, 0.8, "#355E3B");
         this.draw_tree(context, program_state, 25, -15, 5, 0.4, "#355E3B");
@@ -392,8 +414,19 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         this.draw_tree(context, program_state, 7, -20, 5, 2.3, "#87a96b");
         this.draw_tree(context, program_state,  30, -23, 5, 2.7, "#87a96b");
 
+        //Pine Cones
+        this.draw_pine_cones(context, program_state, -20, -0.3, 9.2, -18, 1.5, 7.2, -20, 3.5,
+            7, 2.3, 0, 2.3, 0, 2.3, -2.3)
+        this.draw_pine_cones(context, program_state, 10, -0.3, -2.2, 6, 1.5, -3, 9, 3.5,
+            -3.5, 2.3, 0, 2.3, -2.3, 0, 2.3)
+        this.draw_pine_cones(context, program_state, 26, -1.5, -4.2, 31, 1, -3.5, 29.5, 3,
+            -4.3, 2.3, -2, 2.3, 0, 2.3, -2.3)
+        this.draw_pine_cones(context, program_state, -15, -1.8, -11, -13, 0.1, -13, -15, 2,
+            -13.3, 2.3, 0, -2, -2.3, 0, 2.3)
+        this.draw_pine_cones(context, program_state, 20, -0.3, 9.2, 18, 1.5, 7.2, 20, 3.5,
+            7, 2.3, 0, 2.3, 0, 2.3, -2.3)
 
-        /*
+/*
         //Planet 1
         let planet_1_transform = model_transform;//.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(5, 0, 0));
         //this.shapes.sphere2.draw(context, program_state, planet_1_transform, this.materials.planet1);
