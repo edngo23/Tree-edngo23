@@ -4,6 +4,8 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Texture, Scene
 } = tiny;
 
+const {Cube, Axis_Arrows, Textured_Phong} = defs
+
 //Assignment 2
 /*
 class Cube extends Shape {
@@ -144,6 +146,7 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
+            cube: new Cube(),
             torus: new defs.Torus(15, 15),
             torus2: new defs.Torus(3, 15),
             sphere4: new defs.Subdivision_Sphere(4),
@@ -168,7 +171,11 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         const textured = new defs.Textured_Phong(1);
         this.materials = {
             trunk: new Material(new Gouraud_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
+                {ambient: .8, diffusivity: .6, color: hex_color("#ffffff")}),
+            water: new Material(new Gouraud_Shader(),
+                {ambient: .8, diffusivity: .6, color: hex_color("#ffffff")}),
+            land: new Material(new Gouraud_Shader(),
+                {ambient: .7, diffusivity: 1, color: hex_color("#ffffff")}),
             tree: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
             test: new Material(new defs.Phong_Shader(),
@@ -202,7 +209,7 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
                 {ambient:1, specularity: 0.2, texture: new Texture("assets/groundSquare.png")}),
         }
 
-        this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.initial_camera_location = Mat4.look_at(vec3(0, 10, 40), vec3(0, 0, 0), vec3(0, 1, 0));
     }
 
     //Assignment 2
@@ -273,6 +280,21 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         this.key_triggered_button("Attach to moon", ["Control", "m"], () => this.attached = () => this.moon);
     }
 
+    draw_tree(context, program_state, tx, ty, tz, treez, green_shade){
+        let trunk_transform = Mat4.identity();
+        trunk_transform = trunk_transform.times(Mat4.rotation(1.4, 1, 0, 0))
+            .times(Mat4.translation(tx, ty, tz))
+            .times(Mat4.scale(1, 1, 11))
+        this.shapes.cylinder.draw(context, program_state, trunk_transform, this.materials.trunk.override({color:  hex_color("#5c4322")}));
+
+        for (let i = 0; i < 3; i++) {
+            let cone_transform = Mat4.identity();
+            cone_transform = cone_transform.times(Mat4.rotation(-1.8, 1, 0, 0))
+                .times(Mat4.translation(tx, -1 * ty, treez + i * 2.25))
+                .times(Mat4.scale(5 - i, 5 - i, 2))
+            this.shapes.cone.draw(context, program_state, cone_transform, this.materials.tree.override({color: hex_color(green_shade)}));
+        }
+    }
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
@@ -327,43 +349,49 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         let sky_transform = model_transform.times(Mat4.scale(60, 60, 60));
         let ground_transform = model_transform.times(Mat4.scale(100, -1, 1)).times(Mat4.translation(0,0,12));
         this.shapes.sphere4.draw(context, program_state, sun_transform, this.materials.sun.override({color: yellow}));
-        this.shapes.ground.draw(context, program_state, ground_transform, this.materials.ground);
+        // this.shapes.ground.draw(context, program_state, ground_transform, this.materials.ground);
         this.shapes.skybox.draw(context, program_state, sky_transform, this.materials.sky);
 
-        //Christmas Tree
-        for (let j = 0; j < 3; ++j) {
-            let trunk_transform = Mat4.identity();
-            trunk_transform = trunk_transform.times(Mat4.translation(j*10, -7.5 - j, j * -2.5)).times(Mat4.rotation(1.1, 1, 0, 0)).times(Mat4.scale(1, 1, 8))
-            this.shapes.cylinder.draw(context, program_state, trunk_transform, this.materials.trunk.override({color: color(0.4313, 0.15, 0.05, 1)}));
-            //Tree Cone
+        //River
+        let water_transform = Mat4.identity();
+        water_transform = water_transform.times(Mat4.translation(0, -16, -10))
+            .times(Mat4.rotation(-0.2, 1, 0, 0))
+            .times(Mat4.scale(50, 4, 20))
+        this.shapes.cube.draw(context, program_state, water_transform, this.materials.water.override({color: hex_color("#1ca3ec")}));
 
-            let init_z = -3;
-            for (let i = 0; i < 3; i++) {
-                let cone_transform = Mat4.identity();
-                cone_transform = cone_transform.times(Mat4.translation(0, -2, 0))
-                    .times(Mat4.rotation(-2.05, 1, 0, 0))
-                    .times(Mat4.translation(j*10, (j+1)*2.5, init_z + i * 2.25))
-                    .times(Mat4.scale(5 - i, 5 - i, 2))
-                this.shapes.cone.draw(context, program_state, cone_transform, this.materials.tree.override({color: color(0.133, 0.545, 0.133, 1)}));
-            }
-        }
+        //Land
+        let land_transform = Mat4.identity();
+        land_transform = land_transform.times(Mat4.translation(-31, -15, -10))
+            .times(Mat4.rotation(-0.2, 1, 0, 0))
+            .times(Mat4.scale(25, 5, 20))
+        this.shapes.cube.draw(context, program_state, land_transform, this.materials.land.override({color: hex_color("#C19A6B")}));
 
-        for (let j = 1; j < 3; ++j) {
-            let trunk_transform = Mat4.identity();
-            trunk_transform = trunk_transform.times(Mat4.translation(j*-10, -7.5 -j , j * -2.5)).times(Mat4.rotation(1.1, 1, 0, 0)).times(Mat4.scale(1, 1, 8))
-            this.shapes.cylinder.draw(context, program_state, trunk_transform, this.materials.trunk.override({color: color(0.4313, 0.15, 0.05, 1)}));
-            //Tree Cone
+        land_transform = Mat4.identity();
+        land_transform = land_transform.times(Mat4.translation(31, -15, -10))
+            .times(Mat4.rotation(-0.2, 1, 0, 0))
+            .times(Mat4.scale(25, 5, 20))
+        this.shapes.cube.draw(context, program_state, land_transform, this.materials.land.override({color: hex_color("#C19A6B")}));
 
-            let init_z = -3;
-            for (let i = 0; i < 3; i++) {
-                let cone_transform = Mat4.identity();
-                cone_transform = cone_transform.times(Mat4.translation(0, -2, 0))
-                    .times(Mat4.rotation(-2.05, 1, 0, 0))
-                    .times(Mat4.translation(j*-10, (j+1)*2.5, init_z + i * 2.25))
-                    .times(Mat4.scale(5 - i, 5 - i, 2))
-                this.shapes.cone.draw(context, program_state, cone_transform, this.materials.tree.override({color: color(0.133, 0.545, 0.133, 1)}));
-            }
-        }
+        //Trees
+        this.draw_tree(context, program_state, -20, 5, 5, -1.5, "#355E3B");
+        this.draw_tree(context, program_state, -8, -5, 5, 0.8, "#355E3B");
+        this.draw_tree(context, program_state, -25, -15, 5, 0.4, "#355E3B");
+        this.draw_tree(context, program_state, -35, 0, 5, -1, "#355E3B");
+        this.draw_tree(context, program_state, -17, -4, 5, -1.1, "#4F7942");
+        this.draw_tree(context, program_state, -30, -6, 5, 0.3, "#4F7942");
+        this.draw_tree(context, program_state, -15, -15, 5, 1.6, "#4F7942");
+        this.draw_tree(context, program_state, -7, -20, 5, 2.3, "#87a96b");
+        this.draw_tree(context, program_state, -30, -23, 5, 2.7, "#87a96b");
+        this.draw_tree(context, program_state, 20, 5, 5, -1.5, "#355E3B");
+        this.draw_tree(context, program_state, 8, -5, 5, 0.8, "#355E3B");
+        this.draw_tree(context, program_state, 25, -15, 5, 0.4, "#355E3B");
+        this.draw_tree(context, program_state, 35, 0, 5, -1, "#355E3B");
+        this.draw_tree(context, program_state, 17, -4, 5, -1.1, "#4F7942");
+        this.draw_tree(context, program_state, 30, -6, 5, 0.3, "#4F7942");
+        this.draw_tree(context, program_state, 15, -15, 5, 1.6, "#4F7942");
+        this.draw_tree(context, program_state, 7, -20, 5, 2.3, "#87a96b");
+        this.draw_tree(context, program_state,  30, -23, 5, 2.7, "#87a96b");
+
 
         /*
         //Planet 1
