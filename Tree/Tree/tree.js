@@ -6,142 +6,11 @@ const {
 
 const {Cube, Axis_Arrows, Textured_Phong} = defs
 
-//Assignment 2
-/*
-class Cube extends Shape {
-    constructor() {
-        super("position", "normal",);
-        // Loop 3 times (for each axis), and inside loop twice (for opposing cube sides):
-        this.arrays.position = Vector3.cast(
-            [-1, -1, -1], [1, -1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, -1], [-1, 1, -1], [1, 1, 1], [-1, 1, 1],
-            [-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, 1], [1, -1, -1], [1, 1, 1], [1, 1, -1],
-            [-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1], [1, -1, -1], [-1, -1, -1], [1, 1, -1], [-1, 1, -1]);
-        this.arrays.normal = Vector3.cast(
-            [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0],
-            [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0],
-            [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, -1], [0, 0, -1], [0, 0, -1], [0, 0, -1]);
-        // Arrange the vertices into a square shape in texture space too:
-        this.indices.push(0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6, 8, 9, 10, 9, 11, 10, 12, 13,
-            14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22);
-    }
-}
-
-
-class Cube_Outline extends Shape {
-    constructor() {
-        super("position", "color");
-        //  TODO (Requirement 5).
-        // When a set of lines is used in graphics, you should think of the list entries as
-        // broken down into pairs; each pair of vertices will be drawn as a line segment.
-        // Note: since the outline is rendered with Basic_shader, you need to redefine the position and color of each vertex
-        this.arrays.position = Vector3.cast(
-            [-1, -1, -1], [1, -1, -1],
-            [-1, -1, -1], [-1, -1, 1],
-            [-1, -1, -1], [-1, 1, -1],
-            [1, 1, 1], [1, 1, -1],
-            [1, 1, 1], [1, -1, 1],
-            [1, 1, 1], [-1, 1, 1],
-            [-1,-1,1], [1,-1,1],
-            [-1,-1,1], [-1,1,1],
-            [-1, -1, 1], [-1, 1, 1],
-            [1, -1, -1], [1, 1, -1],
-            [1, 1, -1], [-1, 1, -1],
-            [-1, 1, -1], [-1, 1, 1],
-            [1, -1, -1], [1, -1, 1],
-        );
-        this.arrays.color = [
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-            color(1,1,1,1), color(1,1,1,1),
-        ];
-        this.indices = false;
-    }
-}
-
-class Cube_Single_Strip extends Shape {
-    constructor() {
-        super("position", "normal");
-        // TODO (Requirement 6)
-        this.arrays.position = Vector3.cast(
-            [-1, -1, -1], [1, -1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, -1], [-1, 1, -1], [1, 1, 1], [-1, 1, 1],
-            [-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, 1], [1, -1, -1], [1, 1, 1], [1, 1, -1],
-            [-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1], [1, -1, -1], [-1, -1, -1], [1, 1, -1], [-1, 1, -1]);
-        this.arrays.normal = this.arrays.position;
-        // Arrange the vertices into a square shape in texture space too:
-        this.indices.push(0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6, 8, 9, 10, 9, 11, 10, 12, 13,
-            14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22);
-    }
-}
-*/
-
-/*
-class Base_Scene extends Scene {
-    /**
-     *  **Base_scene** is a Scene that can be added to any display canvas.
-     *  Setup the shapes, materials, camera, and lighting here.
-
-    constructor() {
-        // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
-        super();
-        this.hover = this.swarm = false;
-        // At the beginning of our program, load one of each of these shape definitions onto the GPU.
-        this.shapes = {
-            'cube': new Cube(),
-            'outline': new Cube_Outline(),
-            'strip': new Cube_Single_Strip(),
-        };
-
-        // *** Materials
-        this.materials = {
-            plastic: new Material(new defs.Phong_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
-        };
-        // The white material and basic shader are used for drawing the outline.
-        this.white = new Material(new defs.Basic_Shader());
-    }
-
-    display(context, program_state) {
-        // display():  Called once per frame of animation. Here, the base class's display only does
-        // some initial setup.
-
-        // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
-        if (!context.scratchpad.controls) {
-            this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
-            // Define the global camera and projection matrices, which are stored in program_state.
-            program_state.set_camera(Mat4.translation(5, -10, -30));
-        }
-        program_state.projection_transform = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, 1, 100);
-
-        // *** Lights: *** Values of vector or point lights.
-        const light_position = vec4(0, 5, 5, 1);
-        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
-    }
-}
-*/
-
 
 export class Tree extends Scene { //Should be Scene for Assignment 3
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
-
-        //Assignment 2
-        /*
-        this.set_colors();
-        this.is_outline = false;
-        this.is_still = false;
-        */
 
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
@@ -151,8 +20,6 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
             torus2: new defs.Torus(3, 15),
             sphere4: new defs.Subdivision_Sphere(4),
             circle: new defs.Regular_2D_Polygon(1, 15),
-            // TODO:  Fill in as many additional shape instances as needed in this key/value table.
-            //        (Requirement 1)
 
             sphere0: new defs.Subdivision_Sphere(0),
             sphere1: new (defs.Subdivision_Sphere.prototype.make_flat_shaded_version())(1),
@@ -181,31 +48,8 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
                 {ambient: .7, diffusivity: 1, color: hex_color("#ffffff")}),
             tree: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
-            test: new Material(new defs.Phong_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
-            test2: new Material(new Gouraud_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#992828")}),
-            ring: new Material(new Ring_Shader()),
-            // TODO:  Fill in as many additional material objects as needed in this key/value table.
-            //        (Requirement 4)
             sun: new Material(new defs.Phong_Shader(),
                 {ambient: 1, diffusivity: 1, color: hex_color("#ffffff")}),
-            planet1: new Material(new Gouraud_Shader(),
-                {ambient: 0, diffusivity: 1, specularity: 0, color: hex_color("#808080")}),
-            planet2_g: new Material(new Gouraud_Shader(),
-                {ambient: 0, diffusivity: .2, specularity: 1, color: hex_color("#80FFFF")}),
-            planet2_p: new Material(new defs.Phong_Shader(),
-                {ambient: 0, diffusivity: .2, specularity: 1, color: hex_color("#80FFFF")}),
-            planet3: new Material(new defs.Phong_Shader(),
-                {ambient: 0, diffusivity: 1, specularity: 1, color: hex_color("#B08040")}),
-            planet3_ring: new Material(new Ring_Shader(),
-                {ambient: 1, diffusivity: 0, specularity: 0, color: hex_color("#B08040")}),
-            planet4: new Material(new defs.Phong_Shader(),
-                {ambient: 0, diffusivity: 0.8, specularity: 0.8, color: hex_color("#2121ff")}),
-            moon_4: new Material(new defs.Phong_Shader(),
-                {ambient: 0, diffusivity: 1, specularity: 1, color: hex_color("#d11dc8")}),
-            leaf_color_warm: new Material(new defs.Phong_Shader(),
-                {ambient:0, diffusivity: 1, specularity: 1, color: hex_color("#00FF00")}),
             sky: new Material(textured,
                 {ambient:1, specularity: 0.2, texture: new Texture("assets/sunsetBackgroundSquare.png"), color: color(0,0,0,1)}),
             ground: new Material(textured,
@@ -215,72 +59,11 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 40), vec3(0, 0, 0), vec3(0, 1, 0));
     }
 
-    //Assignment 2
-    /*
-    set_colors() {
-        // TODO:  Create a class member variable to store your cube's colors.
-        // Hint:  You might need to create a member variable at somewhere to store the colors, using `this`.
-        // Hint2: You can consider add a constructor for class Assignment2, or add member variables in Base_Scene's constructor.
-        this.colors = [];
-        for(let i = 0; i < 8; i++) {
-            this.colors.push(color(Math.random(), Math.random(), Math.random(), 1.0));
-        }
-    }
-
-    draw_box(context, program_state, model_transform, index) {
-        // TODO:  Helper function for requirement 3 (see hint).
-        //        This should make changes to the model_transform matrix, draw the next box, and return the newest model_transform.
-        // Hint:  You can add more parameters for this function, like the desired color, index of the box, etc.
-
-        const t = program_state.animation_time / 1000;
-        const pi = Math.PI;
-        const angle = this.is_still ? pi / 2 : pi * t;
-
-        if(this.is_outline) {
-            this.shapes.outline.draw(context, program_state, model_transform, this.white, "LINES");
-        }
-        else {
-            if(index % 2 == 0) {
-                this.shapes.strip.draw(context, program_state, model_transform, this.materials.plastic.override({color: this.colors[index]}), "TRIANGLE_STRIP");
-            }
-            else {
-                this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color: this.colors[index]}));
-            }
-        }
-
-        return model_transform.times(Mat4.scale(1,1/1.5,1)).times(Mat4.translation(0,3,0))
-            .times(Mat4.translation(-1,-1.5,0))
-            .times(Mat4.rotation(0.05 * pi * (0.5 + 0.5 * Math.sin(angle)), 0,0,1))
-            .times(Mat4.translation(1,1.5,0));
-    }
-    */
-
     make_control_panel() {
-        //Assignment 2
-        /*
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("Change Colors", ["c"], this.set_colors);
-        // Add a button for controlling the scene.
-        this.key_triggered_button("Outline", ["o"], () => {
-            // TODO:  Requirement 5b:  Set a flag here that will toggle your outline on and off
-            this.is_outline = !this.is_outline;
-        });
-        this.key_triggered_button("Sit still", ["m"], () => {
-            // TODO:  Requirement 3d:  Set a flag here that will toggle your swaying motion on and off.
-            this.is_still = !this.is_still;
-        });
-        */
-
-        // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("View solar system", ["Control", "0"], () => this.attached = () => this.initial_camera_location);
+        this.key_triggered_button("Reset Camera", ["Control", "0"], () => this.attached = () => this.initial_camera_location);
         this.new_line();
-        this.key_triggered_button("Attach to planet 1", ["Control", "1"], () => this.attached = () => this.planet_1);
-        this.key_triggered_button("Attach to planet 2", ["Control", "2"], () => this.attached = () => this.planet_2);
-        this.new_line();
-        this.key_triggered_button("Attach to planet 3", ["Control", "3"], () => this.attached = () => this.planet_3);
-        this.key_triggered_button("Attach to planet 4", ["Control", "4"], () => this.attached = () => this.planet_4);
-        this.new_line();
-        this.key_triggered_button("Attach to moon", ["Control", "m"], () => this.attached = () => this.moon);
+        this.key_triggered_button("Attach to tree", ["Control", "1"], () => this.attached = () => null);
     }
 
     draw_tree(context, program_state, tx, ty, tz, treez, green_shade){
@@ -332,48 +115,25 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
 
-        // TODO: Create Planets (Requirement 1)
-        // this.shapes.[XXX].draw([XXX]) // <--example
-
         // TODO: Lighting (Requirement 2)
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         const yellow = hex_color("#fac91a");
 
-        const sun_rad = Math.sin(2 * Math.PI * t/10) + 2;
         const light_color = color(1, 1, 1, 1);
 
         let light_position;
         // The parameters of the Light are: position, color, size
         let model_transform = Mat4.identity();
-        //this.shapes.leafTest.draw(context, program_state, model_transform, this.materials.leaf_color_warm);
-
-        // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 3 and 4)
-
-        //let sun_transform = model_transform.times(Mat4.scale(sun_rad,sun_rad,sun_rad));
-        // TODO: Draw Leaf
-
-
-        // TODO: create a day cycle (i.e have light source move from left to right)
-        // TODO: Create a year cycle, with a year being 20 days
-        // TODO: Create seasons, 5 days for each season, and it transitions (i.e summer- blue background/white light source, fall - orange background/white light source (leaves color))
-
-        // Leaves - triangular prism shape with gouroud shading
-        // Tree and connecting to leaves, no idea.
-
-        //Sun
-        //this.shapes.sphere4.draw(context, program_state, sun_transform, this.materials.sun.override({color: light_color}));
 
         //Moving Sun
         let sun_transform;
-        sun_transform = model_transform.times(Mat4.translation(18-(3*t)%36, 7, 0));
-        light_position = vec4(18-(3*t)%36, 7, 0, 1);
+        sun_transform = model_transform.times(Mat4.translation(34-(7*t)%68, 14, -7));
+        light_position = vec4(34-(7*t)%68, 14, -7, 1);
         program_state.lights = [new Light(light_position, light_color, 100)];
 
-        // Drawing Background
+        // Drawing Sky
         let sky_transform = model_transform.times(Mat4.scale(60, 60, 60));
-        let ground_transform = model_transform.times(Mat4.scale(100, -1, 1)).times(Mat4.translation(0,0,12));
         this.shapes.sphere4.draw(context, program_state, sun_transform, this.materials.sun.override({color: yellow}));
-        // this.shapes.ground.draw(context, program_state, ground_transform, this.materials.ground);
         this.shapes.skybox.draw(context, program_state, sky_transform, this.materials.sky);
 
         //River
@@ -426,80 +186,23 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         this.draw_pine_cones(context, program_state, 20, -0.3, 9.2, 18, 1.5, 7.2, 20, 3.5,
             7, 2.3, 0, 2.3, 0, 2.3, -2.3)
 
-/*
-        //Planet 1
-        let planet_1_transform = model_transform;//.times(Mat4.rotation(t, 0, 1, 0)).times(Mat4.translation(5, 0, 0));
-        //this.shapes.sphere2.draw(context, program_state, planet_1_transform, this.materials.planet1);
-        this.planet_1 = planet_1_transform;
-
-        //Planet 2
-        let planet_2_transform = model_transform.times(Mat4.rotation(t/1.2, 0, 1, 0)).times(Mat4.translation(8, 0, 0));
-        if(t%2 < 1)
-        {
-            //this.shapes.sphere3.draw(context, program_state, planet_2_transform, this.materials.planet2_p);
-        }
-        else
-        {
-            //this.shapes.sphere3.draw(context, program_state, planet_2_transform, this.materials.planet2_g);
-        }
-        this.planet_2 = planet_2_transform;
-
-        //Planet 3
-        let planet_3_transform = model_transform.times(Mat4.rotation(t/1.5, 0,1,0)).times(Mat4.translation(11,0,0));
-        this.planet_3 = planet_3_transform;
-        planet_3_transform = planet_3_transform.times(Mat4.rotation(t/1.5,1,0.8,0.5));
-        // this.shapes.sphere4.draw(context, program_state, planet_3_transform, this.materials.planet3);
-        //ring
-        let ring_transform = planet_3_transform.times(Mat4.scale(3,3,0.1));
-        // this.shapes.torus.draw(context, program_state, ring_transform, this.materials.planet3_ring);
-
-        //Planet 4
-        let planet_4_transform = model_transform.times(Mat4.rotation(t/1.8, 0,1,0)).times(Mat4.translation(14,0,0));
-        this.planet_4 = planet_4_transform;
-        // this.shapes.sphere4.draw(context, program_state, planet_4_transform, this.materials.planet4);
-        let moon_transform = planet_4_transform.times(Mat4.rotation(t, 0,1,0)).times(Mat4.translation(2,0,0));
-        this.moon = moon_transform;
-        // this.shapes.sphere1.draw(context, program_state, moon_transform, this.materials.moon_4);
-
         //Set up the camera
-
-        //Set up the camera
-        if(this.attached)
-        {
-            if(this.attached() == this.initial_camera_location)
-            {
-                let desired = this.initial_camera_location;
-                desired = desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
-                program_state.set_camera(desired);
+        if(this.attached) {
+            if (this.attached() == this.initial_camera_location) {
+                //let desired = this.initial_camera_location;
+                //desired = desired.map((x, i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
+                program_state.set_camera(Mat4.look_at(vec3(0, 10, 40), vec3(0, 0, 0), vec3(0, 1, 0)));
+                //program_state.set_camera(this.initial_camera_location);
+                this.attached = null;
             }
             else
             {
-                let desired = this.attached().times(Mat4.translation(0, 0, 5));
+                let desired = model_transform.times(Mat4.translation(8,0,15));
                 desired = Mat4.inverse(desired);
                 desired = desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
                 program_state.set_camera(desired);
             }
-
-
         }
-        */
-
-        /*
-        super.display(context, program_state);
-        const blue = hex_color("#1a9ffa");
-        let model_transform_2 = Mat4.identity();
-        //let model_transform = Mat4.identity().times(Mat4.scale(1,1.5,1));
-
-        for(let i = 0; i < 8; i++) {
-            model_transform_2 = model_transform_2.times(Mat4.scale(1,1.5,1))
-            model_transform_2 = this.draw_box(context, program_state, model_transform_2, i);
-        }
-        */
-        // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper.
-
-
-
-        //this.shapes.torus.draw(context, program_state, model_transform, this.materials.test.override({color: yellow}));
     }
 }
 
