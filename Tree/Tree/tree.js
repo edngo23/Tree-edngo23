@@ -1,120 +1,138 @@
 import {defs, tiny} from './examples/common.js';
+// Pull these names into this module's scope for convenience:
+const {Vector, vec3, vec4, vec, color, Matrix, Mat4, Light, Shape, Material, Shader, Texture, Scene, hex_color} = tiny;
+const {Cube, Axis_Arrows, Textured_Phong, Phong_Shader, Basic_Shader, Subdivision_Sphere} = defs
 
-const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Texture, Scene
-} = tiny;
+import {Color_Phong_Shader, Shadow_Textured_Phong_Shader,
+    Depth_Texture_Shader_2D, Buffered_Texture, LIGHT_DEPTH_TEX_SIZE} from './examples/shadow-demo-shaders.js'
 
-const {Cube, Axis_Arrows, Textured_Phong} = defs
-
-
-export class Tree extends Scene { //Should be Scene for Assignment 3
+// The scene
+export class Tree extends Scene {
     constructor() {
-        // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
 
-        // At the beginning of our program, load one of each of these shape definitions onto the GPU.
+        //Shapes
         this.shapes = {
             cube: new Cube(),
-            water: new Cube(),
-            land: new Cube(),
-            torus: new defs.Torus(15, 15),
-            torus2: new defs.Torus(3, 15),
             sphere4: new defs.Subdivision_Sphere(4),
-            circle: new defs.Regular_2D_Polygon(1, 15),
-
-            sphere0: new defs.Subdivision_Sphere(0),
-            sphere1: new (defs.Subdivision_Sphere.prototype.make_flat_shaded_version())(1),
-
-            sphere2: new (defs.Subdivision_Sphere.prototype.make_flat_shaded_version())(2),
-            sphere3: new defs.Subdivision_Sphere(3),
-            leafTest: new defs.Tetrahedron(true),
-            cylinder      : new defs.Capped_Cylinder( 4, 12, [[0,1],[0,1]] ),
-            cone        : new defs.Closed_Cone( 4, 20, [[0,1],[0,1]] ),
+            cylinder: new defs.Capped_Cylinder( 4, 12, [[0,1],[0,1]] ),
+            cone: new defs.Closed_Cone( 4, 20, [[0,1],[0,1]] ),
             skybox: new defs.Subdivision_Sphere(4),
-            ground: new defs.Capped_Cylinder(100,100,[[0,2],[0,1]]),
             pine_cones: new (defs.Subdivision_Sphere.prototype.make_flat_shaded_version())(2),
-
         };
 
-        // *** Materials
+        // For the first pass (shadowing)
+        this.pure = new Material(new Color_Phong_Shader(), {
+        })
+
         const textured = new defs.Textured_Phong(1);
         this.materials = {
-            // pine_cones: new Material(new Gouraud_Shader(),
-            //     {ambient: .6, diffusivity: .6, color: hex_color("#6F4E37")}),
-            // trunk: new Material(new Gouraud_Shader(),
-            //     {ambient: .8, diffusivity: .6, color: hex_color("#ffffff")}),
-            // water: new Material(new Gouraud_Shader(),
-            //     {ambient: .8, diffusivity: .6, color: hex_color("#ffffff")}),
-            tree: new Material(new Gouraud_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
+            land: new Material(new Shadow_Textured_Phong_Shader(1),
+                {ambient: .4, diffusivity: 1, color: hex_color("#6F4E37")}),
             sun: new Material(new defs.Phong_Shader(),
+                {ambient: 1, diffusivity: 1, color: hex_color("#fac91a")}),
+            moon: new Material(new defs.Phong_Shader(),
                 {ambient: 1, diffusivity: 1, color: hex_color("#ffffff")}),
             sky: new Material(textured,
-                {ambient:1, specularity: 0.2, texture: new Texture("assets/sunsetBackgroundSquare.png"), color: color(0,0,0,1)}),
-            ground: new Material(textured,
-                {ambient:1, specularity: 0.2, texture: new Texture("assets/groundSquare.png")}),
-            water: new Material(new Texture_Scroll_X(), {
-                color: hex_color("#ffffff"),
-                ambient: 1,
-                texture: new Texture("assets/water.png", "LINEAR_MIPMAP_LINEAR")
-            }),
-            land: new Material(new Textured_Phong(), {
-                color: hex_color("#ffffff"),
-                ambient: 1,
-                texture: new Texture("assets/grass.png", "LINEAR_MIPMAP_LINEAR")
-            }),
+                {ambient:1, specularity: 0.2, texture: new Texture("./assets/sunsetBackgroundSquare.png")}),
+            spring_sky: new Material(textured,
+                {ambient:1, specularity: 0.2, texture: new Texture("./assets/sunsetBackgroundSquare.png"), color: color(0,0,0,1)}),
+            summer_sky: new Material(textured,
+                {ambient:1, specularity: 0.2, texture: new Texture("./assets/summerSky.png"), color: color(0,0,0,1)}),
+            fall_sky: new Material(textured,
+                {ambient:1, specularity: 0.2, texture: new Texture("./assets/fallSky.png"), color: color(0,0,0,1)}),
+            winter_sky: new Material(textured,
+                {ambient:1, specularity: 0.2, texture: new Texture("./assets/winterSky.png"), color: color(0,0,0,1)}),
+            apocalypse: new Material(textured,
+                {ambient:1, specularity: 0.2, texture: new Texture("./assets/apocalypse.png"), color: color(0,0,0,1)}),
+            night_sky: new Material(textured,
+                {ambient:1, specularity: 0.2, texture: new Texture("./assets/nightsky.png"), color: color(0,0,0,1)}),
             land2: new Material(new Textured_Phong(), {
                 color: hex_color("#ffffff"),
                 ambient: 1,
-                texture: new Texture("assets/land1.jpg", "LINEAR_MIPMAP_LINEAR")
+                texture: new Texture("./assets/grass.png", "LINEAR_MIPMAP_LINEAR")
             }),
-            trunk: new Material(new Textured_Phong(), {
-                color: hex_color("#ffffff"),
-                ambient: 0.8,
-                texture: new Texture("assets/trunk.jpg", "LINEAR_MIPMAP_LINEAR")
-            }),
-            pinecones: new Material(new Textured_Phong(), {
-                color: hex_color("#ffffff"),
-                ambient: 0.5,
-                texture: new Texture("assets/pinecones.png", "LINEAR_MIPMAP_LINEAR")
-            }),
-            treeleaf: new Material(new Textured_Phong(), {
-                color: hex_color("#ffffff"),
-                ambient: 0.7,
-                texture: new Texture("assets/treeleaf.png", "LINEAR_MIPMAP_LINEAR")
-            }),
-
-
         }
 
+        this.water = new Material(new Texture_Scroll_X(), {
+            color: hex_color("#000000"),
+            ambient: 1,  diffusivity: .0, specularity: .0,
+            texture: new Texture("assets/water.png", "LINEAR_MIPMAP_LINEAR")
+        })
+
+        this.land = new Material(new Shadow_Textured_Phong_Shader(1), {
+            color: color(.168, .274, .2, 1),
+            ambient:0.3,
+            color_texture: new Texture("assets/grass.png"),
+            light_depth_texture: null
+        })
+
+        this.land2 = new Material(new Shadow_Textured_Phong_Shader(1), {
+            color: color(.203, .152, .117, 1),
+            ambient: .4, diffusivity: .5, specularity: .5,
+            color_texture: new Texture("assets/land1.jpg"),
+            light_depth_texture: null
+        })
+
+        this.treeleaf = new Material(new Shadow_Textured_Phong_Shader(1), {
+            color: color(.125, .180, .168, 1),
+            ambient: .4, diffusivity: .5, specularity: .2,
+            color_texture: new Texture("assets/treeleaf.png", "LINEAR_MIPMAP_LINEAR"),
+            light_depth_texture: null
+        })
+
+        this.trunk = new Material(new Shadow_Textured_Phong_Shader(1), {
+            color: color(.403, .301, .211, 1),
+            ambient: .4, diffusivity: .5, specularity: .5,
+            color_texture: new Texture("assets/trunk.jpg", "LINEAR_MIPMAP_LINEAR"),
+            light_depth_texture: null
+        })
+
+        this.pinecones = new Material(new Shadow_Textured_Phong_Shader(1), {
+            color: color(.1, .145, .105, 1),
+            ambient: .4, diffusivity: .5, specularity: .5,
+            color_texture: new Texture("assets/pinecones.png", "LINEAR_MIPMAP_LINEAR"),
+            light_depth_texture: null
+        })
+
+        // To make sure texture initialization only does once
+        this.init_ok = false;
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 40), vec3(0, 0, 0), vec3(0, 1, 0));
         this.shapes.cone.arrays.texture_coord = this.shapes.cone.arrays.texture_coord.map(x => x.times(2));
+        this.night_time = false;
+        this.previousX = 0;
+        this.season = 0;
         this.move = false;
     }
 
     make_control_panel() {
-        // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
+        // // make_control_panel(): Sets up a panel of interactive HTML elements, including
         this.key_triggered_button("Reset Camera", ["Control", "0"], () => this.attached = () => this.initial_camera_location);
         this.new_line();
         this.key_triggered_button("Attach to tree", ["Control", "1"], () => this.attached = () => null);
+        this.new_line();
+        this.key_triggered_button("Spring", ["Control", "2"], () => {this.season = 0;});
+        this.key_triggered_button("Summer", ["Control", "3"], () => {this.season = 1;});
+        this.key_triggered_button("Fall", ["Control", "4"], () => {this.season = 2;});
+        this.key_triggered_button("Winter", ["Control", "5"], () => {this.season = 3;});
+        this.key_triggered_button("Apocalypse", ["Control", "6"], () => {this.season = 4;});
         this.key_triggered_button("Move Trees", ["m"], () => {
-            // TODO:  Requirement 3d:  Set a flag here that will toggle your swaying motion on and off.
             this.move = !this.move;
         });
     }
 
-    draw_tree(context, program_state, tx, ty, tz, treez, green_shade){
+    draw_tree(context, program_state, tx, ty, tz, treez, green_shade, shadow){
         let trunk_transform = Mat4.identity();
         trunk_transform = trunk_transform.times(Mat4.rotation(1.4, 1, 0, 0))
             .times(Mat4.translation(tx, ty, tz))
             .times(Mat4.scale(1, 1, 11))
-        this.shapes.cylinder.draw(context, program_state, trunk_transform, this.materials.trunk.override({color:  hex_color("#000000")}));
+        this.shapes.cylinder.draw(context, program_state, trunk_transform, shadow ? this.trunk : this.pure);
 
         let angle_of_rotation = 0;
         if(this.move){
             const t = this.t = program_state.animation_time / 1000;
             const max_rot = 0.0015 * Math.PI;
-            angle_of_rotation = ((max_rot/2) + ((max_rot/2) * Math.sin(1.2 * Math.PI * t)));
+            angle_of_rotation = ((max_rot/2) + ((max_rot/2) * Math.sin(1.1 * Math.PI * t)));
         }
 
         let j = -1;
@@ -124,12 +142,12 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
                 .times(Mat4.rotation(angle_of_rotation * j, 0, 0, 1))
                 .times(Mat4.translation(tx, -1 * ty, treez + i * 2.25))
                 .times(Mat4.scale(5 - i, 5 - i, 3))
-            this.shapes.cone.draw(context, program_state, cone_transform, this.materials.treeleaf.override({color:  hex_color("#000000")}));
+            this.shapes.cone.draw(context, program_state, cone_transform, shadow ? this.treeleaf : this.pure);
             j = j*  -1;
         }
     }
 
-    draw_pine_cones(context, program_state, p1x, p1y, p1z, p2x, p2y, p2z, p3x, p3y, p3z, p1angle1, p1angle2, p2angle1, p2angle2, p3angle1, p3angle2){
+    draw_pine_cones(context, program_state, p1x, p1y, p1z, p2x, p2y, p2z, p3x, p3y, p3z, p1angle1, p1angle2, p2angle1, p2angle2, p3angle1, p3angle2, shadow){
         let angle_of_rotation = 0;
 
         if(this.move){
@@ -143,53 +161,127 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
             .times(Mat4.rotation(p1angle2, 1, 0, 0))
             .times(Mat4.rotation(angle_of_rotation, 0, 0, 1))
             .times(Mat4.scale(0.55, 0.7,0.45));
-        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pinecones.override({color:  hex_color("#000000")}));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, shadow? this.pinecones : this.pure);
 
         pine_transform = Mat4.identity().times(Mat4.translation(p2x, p2y, p2z))
             .times(Mat4.rotation(p2angle1, 1, 0, 0))
             .times(Mat4.rotation(p2angle2, 1, 0, 0))
             .times(Mat4.rotation(angle_of_rotation * -1, 0, 0, 1))
             .times(Mat4.scale(0.55, 0.7,0.45));
-        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pinecones.override({color:  hex_color("#000000")}));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, shadow? this.pinecones : this.pure);
 
         pine_transform = Mat4.identity().times(Mat4.translation(p3x, p3y, p3z))
             .times(Mat4.rotation(p3angle1, 0, 1, 0))
             .times(Mat4.rotation(p3angle2, 1, 0, 0))
             .times(Mat4.rotation(angle_of_rotation, 0, 0, 1))
             .times(Mat4.scale(0.55, 0.7,0.45));
-        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pinecones.override({color:  hex_color("#000000")}));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, shadow? this.pinecones : this.pure);
     }
 
-    display(context, program_state) {
-        if (!context.scratchpad.controls) {
-            this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
-            // Define the global camera and projection matrices, which are stored in program_state.
-            program_state.set_camera(this.initial_camera_location);
-        }
+    texture_buffer_init(gl) {
+        // Depth Texture
+        this.lightDepthTexture = gl.createTexture();
+        // Bind it to TinyGraphics
+        this.light_depth_texture = new Buffered_Texture(this.lightDepthTexture);
+        this.materials.sky.light_depth_texture = this.light_depth_texture;
+        this.materials.land.light_depth_texture = this.light_depth_texture;
+        this.materials.land2.light_depth_texture = this.light_depth_texture;
+        this.land.light_depth_texture = this.light_depth_texture;
+        this.land2.light_depth_texture = this.light_depth_texture;
 
-        program_state.projection_transform = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, .1, 1000);
+        this.lightDepthTextureSize = LIGHT_DEPTH_TEX_SIZE;
+        gl.bindTexture(gl.TEXTURE_2D, this.lightDepthTexture);
+        gl.texImage2D(
+            gl.TEXTURE_2D,      // target
+            0,                  // mip level
+            gl.DEPTH_COMPONENT, // internal format
+            this.lightDepthTextureSize,   // width
+            this.lightDepthTextureSize,   // height
+            0,                  // border
+            gl.DEPTH_COMPONENT, // format
+            gl.UNSIGNED_INT,    // type
+            null);              // data
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-        // TODO: Lighting (Requirement 2)
-        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
-        const yellow = hex_color("#fac91a");
+        // Depth Texture Buffer
+        this.lightDepthFramebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER,       // target
+            gl.DEPTH_ATTACHMENT,  // attachment point
+            gl.TEXTURE_2D,        // texture target
+            this.lightDepthTexture,         // texture
+            0);                   // mip level
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-        const light_color = color(1, 1, 1, 1);
+        // create a color texture of the same size as the depth texture
+        // see article why this is needed_
+        this.unusedTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.unusedTexture);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            this.lightDepthTextureSize,
+            this.lightDepthTextureSize,
+            0,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            null,
+        );
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        // attach it to the framebuffer
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER,        // target
+            gl.COLOR_ATTACHMENT0,  // attachment point
+            gl.TEXTURE_2D,         // texture target
+            this.unusedTexture,         // texture
+            0);                    // mip level
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
 
-        let light_position;
-        // The parameters of the Light are: position, color, size
+    render_scene(context, program_state, shadow_pass, draw_light_source=false, draw_shadow=false) {
+        // shadow_pass: true if this is the second pass that draw the shadow.
+        // draw_light_source: true if we want to draw the light source.
+        // draw_shadow: true if we want to draw the shadow
+
+        const t = program_state.animation_time/1000;
+
         let model_transform = Mat4.identity();
 
-        //Moving Sun
+        program_state.draw_shadow = draw_shadow;
+
+        //Sun and Sky
         let sun_transform;
         sun_transform = model_transform.times(Mat4.translation(34-(7*t)%68, 14, -7));
-        light_position = vec4(34-(7*t)%68, 14, -7, 1);
-        program_state.lights = [new Light(light_position, light_color, 100)];
-
-        // Drawing Sky
         let sky_transform = model_transform.times(Mat4.scale(60, 60, 60));
-        this.shapes.sphere4.draw(context, program_state, sun_transform, this.materials.sun.override({color: yellow}));
-        this.shapes.skybox.draw(context, program_state, sky_transform, this.materials.sky);
+        if (this.night_time == true) {
+            // Sun Light Color is Yellow
+            this.shapes.sphere4.draw(context, program_state, sun_transform, shadow_pass? this.materials.sun : this.pure);
+            // Check Season for background
+            if(this.season == 0) {
+                this.shapes.skybox.draw(context, program_state, sky_transform, this.materials.spring_sky);
+            } else if (this.season == 1) {
+                this.shapes.skybox.draw(context, program_state, sky_transform, this.materials.summer_sky);
+            } else if (this.season == 2) {
+                this.shapes.skybox.draw(context, program_state, sky_transform, this.materials.fall_sky);
+            } else if (this.season == 3) {
+                this.shapes.skybox.draw(context, program_state, sky_transform, this.materials.winter_sky);
+            } else if (this.season == 4) {
+                this.shapes.skybox.draw(context, program_state, sky_transform, this.materials.apocalypse);
+            }
+        } else {
+            // Moon Light Color is White
+            const white = hex_color("#ffffff");
+            this.shapes.sphere4.draw(context, program_state, sun_transform, shadow_pass? this.materials.moon : this.pure);
+            this.shapes.skybox.draw(context, program_state, sky_transform, this.materials.night_sky);
+        }
 
         //River
         let water_transform = Mat4.identity();
@@ -197,281 +289,144 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
             .times(Mat4.rotation(-0.2, 1, 0, 0))
             .times(Mat4.rotation(3.14, 0, 1, 0))
             .times(Mat4.scale(50, 4, 20))
-        this.shapes.water.draw(context, program_state, water_transform, this.materials.water.override({color: hex_color("#000000")}));
+        this.shapes.cube.draw(context, program_state, water_transform, shadow_pass? this.water : this.pure);
 
         //Land
+        let land_transform = Mat4.identity();
+        land_transform = land_transform.times(Mat4.translation(0, -23, -10))
+            .times(Mat4.rotation(-0.2, 1, 0, 0))
+            .times(Mat4.scale(200, 0.5, 20))
+        this.shapes.cube.draw(context, program_state, land_transform, shadow_pass? this.materials.land : this.pure);
+
         for(let i = 0; i < 2; ++i) {
             let land_transform = Mat4.identity();
-            land_transform = land_transform.times(Mat4.translation(-31 + (i * 62), -12, -10))
+            land_transform = land_transform.times(Mat4.translation(-31 + (i * 62), -15, -10))
                 .times(Mat4.rotation(-0.2, 1, 0, 0))
-                .times(Mat4.scale(25, 1, 20))
-            this.shapes.land.draw(context, program_state, land_transform, this.materials.land.override({color: hex_color("#000000")}));
+                .times(Mat4.scale(25, 5, 20))
+            this.shapes.cube.draw(context, program_state, land_transform, shadow_pass? this.land : this.pure)
 
             let land_transform2 = Mat4.identity();
             land_transform2 = land_transform2.times(Mat4.translation(-31 + (i * 62), -16, -10))
                 .times(Mat4.rotation(-0.2, 1, 0, 0))
-                .times(Mat4.scale(25, 4, 21))
-            this.shapes.land.draw(context, program_state, land_transform2, this.materials.land2.override({color: hex_color("#000000")}));
+                .times(Mat4.scale(25, 4, 20.5))
+            this.shapes.cube.draw(context, program_state, land_transform2, shadow_pass? this.land2 : this.pure);
         }
 
+
         //Trees on left side
-        this.draw_tree(context, program_state, -20, 5, 5, -1.5, "#355E3B");
-        this.draw_tree(context, program_state, -8, -5, 5, 0.8, "#355E3B");
-        this.draw_tree(context, program_state, -25, -15, 5, 0.4, "#355E3B");
-        this.draw_tree(context, program_state, -35, 0, 5, -1, "#355E3B");
-        this.draw_tree(context, program_state, -17, -4, 5, -1.1, "#4F7942");
-        this.draw_tree(context, program_state, -30, -6, 5, 0.3, "#4F7942");
-        this.draw_tree(context, program_state, -15, -15, 5, 1.6, "#4F7942");
-        this.draw_tree(context, program_state, -7, -20, 5, 2.3, "#87a96b");
-        this.draw_tree(context, program_state, -30, -23, 5, 2.7, "#87a96b");
+        this.draw_tree(context, program_state, -20, 5, 5, -1.5, "#355E3B", shadow_pass);
+        this.draw_tree(context, program_state, -8, -5, 5, 0.8, "#355E3B", shadow_pass);
+        this.draw_tree(context, program_state, -25, -15, 5, 0.4, "#355E3B", shadow_pass);
+        this.draw_tree(context, program_state, -35, 0, 5, -1, "#355E3B", shadow_pass);
+        this.draw_tree(context, program_state, -17, -4, 5, -1.1, "#4F7942", shadow_pass);
+        this.draw_tree(context, program_state, -30, -6, 5, 0.3, "#4F7942", shadow_pass);
+        this.draw_tree(context, program_state, -15, -15, 5, 1.6, "#4F7942", shadow_pass);
+        this.draw_tree(context, program_state, -7, -20, 5, 2.3, "#87a96b", shadow_pass);
+        this.draw_tree(context, program_state, -30, -23, 5, 2.7, "#87a96b", shadow_pass);
 
         //Trees on Right side
-        this.draw_tree(context, program_state, 20, 5, 5, -1.5, "#355E3B");
-        this.draw_tree(context, program_state, 8, -5, 5, 0.8, "#355E3B");
-        this.draw_tree(context, program_state, 25, -15, 5, 0.4, "#355E3B");
-        this.draw_tree(context, program_state, 35, 0, 5, -1, "#355E3B");
-        this.draw_tree(context, program_state, 17, -4, 5, -1.1, "#4F7942");
-        this.draw_tree(context, program_state, 30, -6, 5, 0.3, "#4F7942");
-        this.draw_tree(context, program_state, 15, -15, 5, 1.6, "#4F7942");
-        this.draw_tree(context, program_state, 7, -20, 5, 2.3, "#87a96b");
-        this.draw_tree(context, program_state,  30, -23, 5, 2.7, "#87a96b");
+        this.draw_tree(context, program_state, 20, 5, 5, -1.5, "#355E3B", shadow_pass);
+        this.draw_tree(context, program_state, 8, -5, 5, 0.8, "#355E3B", shadow_pass);
+        this.draw_tree(context, program_state, 25, -15, 5, 0.4, "#355E3B", shadow_pass);
+        this.draw_tree(context, program_state, 35, 0, 5, -1, "#355E3B", shadow_pass);
+        this.draw_tree(context, program_state, 17, -4, 5, -1.1, "#4F7942", shadow_pass);
+        this.draw_tree(context, program_state, 30, -6, 5, 0.3, "#4F7942", shadow_pass);
+        this.draw_tree(context, program_state, 15, -15, 5, 1.6, "#4F7942", shadow_pass);
+        this.draw_tree(context, program_state, 7, -20, 5, 2.3, "#87a96b", shadow_pass);
+        this.draw_tree(context, program_state,  30, -23, 5, 2.7, "#87a96b", shadow_pass);
 
         //Pine Cones
         this.draw_pine_cones(context, program_state, -20, -0.05, 9.2, -18, 1.5, 7.2, -20, 4,
-            6.2, 2.3, 0, 2.3, 0, 2.3, -2.3)
+            6.2, 2.3, 0, 2.3, 0, 2.3, -2.3, shadow_pass)
         this.draw_pine_cones(context, program_state, 10, -1.1, -1.1, 6, 1.5, -3, 9, 3.5,
-            -3.9, 2.3, 0, 2.3, -2.3, 0, 2.3)
+            -3.9, 2.3, 0, 2.3, -2.3, 0, 2.3, shadow_pass)
         this.draw_pine_cones(context, program_state, 26, -1.5, -4.2, 31, 1, -3.5, 29.5, 3,
-            -4.3, 2.3, -2, 2.3, 0, 2.3, -2.3)
+            -4.3, 2.3, -2, 2.3, 0, 2.3, -2.3, shadow_pass)
         this.draw_pine_cones(context, program_state, -15, -1.8, -11, -13, 0.1, -13, -15, 2,
-            -13.3, 2.3, 0, -2, -2.3, 0, 2.3)
+            -13.3, 2.3, 0, -2, -2.3, 0, 2.3, shadow_pass)
         this.draw_pine_cones(context, program_state, 20, -0.05, 9.2, 18, 1.5, 7.2, 20, 3.5,
-            6.2, 2.3, 0, 2.3, 0, 2.3, -2.3)
+            6.2, 2.3, 0, 2.3, 0, 2.3, -2.3, shadow_pass)
+    }
 
-        //Set up the camera
+    display(context, program_state) {
+        const t = program_state.animation_time/1000;
+        const gl = context.context;
+
+        if (!this.init_ok) {
+            const ext = gl.getExtension('WEBGL_depth_texture');
+            if (!ext) {
+                return alert('need WEBGL_depth_texture');  // eslint-disable-line
+            }
+            this.texture_buffer_init(gl);
+
+            this.init_ok = true;
+        }
+
+        if (!context.scratchpad.controls) {
+            this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+            // Define the global camera and projection matrices, which are stored in program_state.
+            // Locate the camera here*/
+            program_state.set_camera(this.initial_camera_location);
+        }
+
+        // The position of the light
+        this.light_position = vec4(34-(7*t)%68, 14, -7, 1);
+        // The color of the light
+        this.light_color = color(1, 1, 1, 1);
+        //Night time
+        if(this.previousX < 34-(7*t)%68) {
+            this.night_time = !this.night_time;
+        }
+        this.previousX = 34-(7*t)%68;
+        program_state.lights = [new Light(this.light_position, this.light_color, 10000)];
+
+        // This is a rough target of the light.
+        // Although the light is point light, we need a target to set the POV of the light
+        this.light_view_target = vec4(0, 0, 0, 1);
+        this.light_field_of_view = 139 * Math.PI / 180; // 130 degree
+
+        // Step 1: set the perspective and camera to the POV of light
+        const light_view_mat = Mat4.look_at(
+            vec3(this.light_position[0], this.light_position[1], this.light_position[2]),
+            vec3(this.light_view_target[0], this.light_view_target[1], this.light_view_target[2]),
+            vec3(0, 1, 0), // assume the light to target will have a up dir of +y, maybe need to change according to your case
+        );
+        const light_proj_mat = Mat4.perspective(this.light_field_of_view, 1, 7, 60);
+        // Bind the Depth Texture Buffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
+        gl.viewport(0, 0, this.lightDepthTextureSize, this.lightDepthTextureSize);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        // Prepare uniforms
+        program_state.light_view_mat = light_view_mat;
+        program_state.light_proj_mat = light_proj_mat;
+        program_state.light_tex_mat = light_proj_mat;
+        program_state.view_mat = light_view_mat;
+        program_state.projection_transform = light_proj_mat;
+        this.render_scene(context, program_state, false,false, false);
+
+        // Step 2: unbind, draw to the canvas
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        program_state.view_mat = program_state.camera_inverse;
+        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 0.5, 5000);
+        this.render_scene(context, program_state, true,true, true);
+
+        //Camera toggling
         if(this.attached) {
             if (this.attached() == this.initial_camera_location) {
-                //let desired = this.initial_camera_location;
-                //desired = desired.map((x, i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
                 program_state.set_camera(Mat4.look_at(vec3(0, 10, 40), vec3(0, 0, 0), vec3(0, 1, 0)));
-                //program_state.set_camera(this.initial_camera_location);
                 this.attached = null;
             }
             else
             {
-                let desired = model_transform.times(Mat4.translation(8,0,15));
+                let desired = Mat4.translation(8,0,15);
                 desired = Mat4.inverse(desired);
                 desired = desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
                 program_state.set_camera(desired);
             }
         }
     }
-}
 
-class Gouraud_Shader extends Shader {
-    // This is a Shader using Phong_Shader as template
-    // TODO: Modify the glsl coder here to create a Gouraud Shader (Planet 2)
-
-    constructor(num_lights = 2) {
-        super();
-        this.num_lights = num_lights;
-    }
-
-    shared_glsl_code() {
-        // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
-        return ` 
-        precision mediump float;
-        const int N_LIGHTS = ` + this.num_lights + `;
-        uniform float ambient, diffusivity, specularity, smoothness;
-        uniform vec4 light_positions_or_vectors[N_LIGHTS], light_colors[N_LIGHTS];
-        uniform float light_attenuation_factors[N_LIGHTS];
-        uniform vec4 shape_color;
-        uniform vec3 squared_scale, camera_center;
-
-        // Specifier "varying" means a variable's final value will be passed from the vertex shader
-        // on to the next phase (fragment shader), then interpolated per-fragment, weighted by the
-        // pixel fragment's proximity to each of the 3 vertices (barycentric interpolation).
-        varying vec3 N, vertex_worldspace;
-        varying vec4 vertex_color;
-        
-        // ***** PHONG SHADING HAPPENS HERE: *****                                       
-        vec3 phong_model_lights( vec3 N, vec3 vertex_worldspace ){                                        
-            // phong_model_lights():  Add up the lights' contributions.
-            vec3 E = normalize( camera_center - vertex_worldspace );
-            vec3 result = vec3( 0.0 );
-            for(int i = 0; i < N_LIGHTS; i++){
-                // Lights store homogeneous coords - either a position or vector.  If w is 0, the 
-                // light will appear directional (uniform direction from all points), and we 
-                // simply obtain a vector towards the light by directly using the stored value.
-                // Otherwise if w is 1 it will appear as a point light -- compute the vector to 
-                // the point light's location from the current surface point.  In either case, 
-                // fade (attenuate) the light as the vector needed to reach it gets longer.  
-                vec3 surface_to_light_vector = light_positions_or_vectors[i].xyz - 
-                                               light_positions_or_vectors[i].w * vertex_worldspace;                                             
-                float distance_to_light = length( surface_to_light_vector );
-
-                vec3 L = normalize( surface_to_light_vector );
-                vec3 H = normalize( L + E );
-                // Compute the diffuse and specular components from the Phong
-                // Reflection Model, using Blinn's "halfway vector" method:
-                float diffuse  =      max( dot( N, L ), 0.0 );
-                float specular = pow( max( dot( N, H ), 0.0 ), smoothness );
-                float attenuation = 1.0 / (1.0 + light_attenuation_factors[i] * distance_to_light * distance_to_light );
-                
-                vec3 light_contribution = shape_color.xyz * light_colors[i].xyz * diffusivity * diffuse
-                                                          + light_colors[i].xyz * specularity * specular;
-                result += attenuation * light_contribution;
-            }
-            return result;
-        } `;
-    }
-
-    vertex_glsl_code() {
-        // ********* VERTEX SHADER *********
-        return this.shared_glsl_code() + `
-            attribute vec3 position, normal;                            
-            // Position is expressed in object coordinates.
-            
-            uniform mat4 model_transform;
-            uniform mat4 projection_camera_model_transform;
-    
-            void main(){                                                                   
-                // The vertex's final resting place (in NDCS):
-                gl_Position = projection_camera_model_transform * vec4( position, 1.0 );
-                // The final normal vector in screen space.
-                N = normalize( mat3( model_transform ) * normal / squared_scale);
-                vertex_worldspace = ( model_transform * vec4( position, 1.0 ) ).xyz;
-                
-                //For gouraud shader
-                vertex_color = vec4(shape_color.xyz * ambient, shape_color.w);
-                vertex_color.xyz += phong_model_lights(normalize(N), vertex_worldspace);
-            } `;
-    }
-
-    fragment_glsl_code() {
-        // ********* FRAGMENT SHADER *********
-        // A fragment is a pixel that's overlapped by the current triangle.
-        // Fragments affect the final image or get discarded due to depth.
-        return this.shared_glsl_code() + `
-            void main(){                                                           
-                // Compute an initial (ambient) color:
-                //gl_FragColor = vec4( shape_color.xyz * ambient, shape_color.w );
-                // Compute the final color with contributions from lights:
-                //gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
-                
-                //For gouraud shader
-                gl_FragColor = vertex_color;
-            } `;
-    }
-
-    send_material(gl, gpu, material) {
-        // send_material(): Send the desired shape-wide material qualities to the
-        // graphics card, where they will tweak the Phong lighting formula.
-        gl.uniform4fv(gpu.shape_color, material.color);
-        gl.uniform1f(gpu.ambient, material.ambient);
-        gl.uniform1f(gpu.diffusivity, material.diffusivity);
-        gl.uniform1f(gpu.specularity, material.specularity);
-        gl.uniform1f(gpu.smoothness, material.smoothness);
-    }
-
-    send_gpu_state(gl, gpu, gpu_state, model_transform) {
-        // send_gpu_state():  Send the state of our whole drawing context to the GPU.
-        const O = vec4(0, 0, 0, 1), camera_center = gpu_state.camera_transform.times(O).to3();
-        gl.uniform3fv(gpu.camera_center, camera_center);
-        // Use the squared scale trick from "Eric's blog" instead of inverse transpose matrix:
-        const squared_scale = model_transform.reduce(
-            (acc, r) => {
-                return acc.plus(vec4(...r).times_pairwise(r))
-            }, vec4(0, 0, 0, 0)).to3();
-        gl.uniform3fv(gpu.squared_scale, squared_scale);
-        // Send the current matrices to the shader.  Go ahead and pre-compute
-        // the products we'll need of the of the three special matrices and just
-        // cache and send those.  They will be the same throughout this draw
-        // call, and thus across each instance of the vertex shader.
-        // Transpose them since the GPU expects matrices as column-major arrays.
-        const PCM = gpu_state.projection_transform.times(gpu_state.camera_inverse).times(model_transform);
-        gl.uniformMatrix4fv(gpu.model_transform, false, Matrix.flatten_2D_to_1D(model_transform.transposed()));
-        gl.uniformMatrix4fv(gpu.projection_camera_model_transform, false, Matrix.flatten_2D_to_1D(PCM.transposed()));
-
-        // Omitting lights will show only the material color, scaled by the ambient term:
-        if (!gpu_state.lights.length)
-            return;
-
-        const light_positions_flattened = [], light_colors_flattened = [];
-        for (let i = 0; i < 4 * gpu_state.lights.length; i++) {
-            light_positions_flattened.push(gpu_state.lights[Math.floor(i / 4)].position[i % 4]);
-            light_colors_flattened.push(gpu_state.lights[Math.floor(i / 4)].color[i % 4]);
-        }
-        gl.uniform4fv(gpu.light_positions_or_vectors, light_positions_flattened);
-        gl.uniform4fv(gpu.light_colors, light_colors_flattened);
-        gl.uniform1fv(gpu.light_attenuation_factors, gpu_state.lights.map(l => l.attenuation));
-    }
-
-    update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {
-        // update_GPU(): Define how to synchronize our JavaScript's variables to the GPU's.  This is where the shader
-        // recieves ALL of its inputs.  Every value the GPU wants is divided into two categories:  Values that belong
-        // to individual objects being drawn (which we call "Material") and values belonging to the whole scene or
-        // program (which we call the "Program_State").  Send both a material and a program state to the shaders
-        // within this function, one data field at a time, to fully initialize the shader for a draw.
-
-        // Fill in any missing fields in the Material object with custom defaults for this shader:
-        const defaults = {color: color(0, 0, 0, 1), ambient: 0, diffusivity: 1, specularity: 1, smoothness: 40};
-        material = Object.assign({}, defaults, material);
-
-        this.send_material(context, gpu_addresses, material);
-        this.send_gpu_state(context, gpu_addresses, gpu_state, model_transform);
-    }
-}
-
-class Ring_Shader extends Shader {
-    update_GPU(context, gpu_addresses, graphics_state, model_transform, material) {
-        // update_GPU():  Defining how to synchronize our JavaScript's variables to the GPU's:
-        const [P, C, M] = [graphics_state.projection_transform, graphics_state.camera_inverse, model_transform],
-            PCM = P.times(C).times(M);
-        context.uniformMatrix4fv(gpu_addresses.model_transform, false, Matrix.flatten_2D_to_1D(model_transform.transposed()));
-        context.uniformMatrix4fv(gpu_addresses.projection_camera_model_transform, false,
-            Matrix.flatten_2D_to_1D(PCM.transposed()));
-    }
-
-    shared_glsl_code() {
-        // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
-        return `
-        precision mediump float;
-        varying vec4 point_position;
-        varying vec4 center;
-        `;
-    }
-
-    vertex_glsl_code() {
-        // ********* VERTEX SHADER *********
-        // TODO:  Complete the main function of the vertex shader (Extra Credit Part II).
-        return this.shared_glsl_code() + `
-        attribute vec3 position;
-        uniform mat4 model_transform;
-        uniform mat4 projection_camera_model_transform;
-        
-        void main(){
-            // The vertex's final resting place:
-            gl_Position = projection_camera_model_transform * vec4( position, 1.0 );
-            point_position = model_transform * vec4(position, 1.0);
-            
-            // position of the new center of ring
-            center = model_transform * vec4(0.0, 0.0, 0.0, 1.0);
-        }`;
-    }
-
-    fragment_glsl_code() {
-        // ********* FRAGMENT SHADER *********
-        // TODO:  Complete the main function of the fragment shader (Extra Credit Part II).
-        return this.shared_glsl_code() + `
-        void main(){
-            // distance between fragment and center
-            vec3 distance = vec3(point_position.xyz - center.xyz);
-            
-            // set alpha value (brightness) of the fragment
-            gl_FragColor = vec4(vec3(0.69,0.502,0.251), cos(length(distance) * 20.0));
-        }`;
-    }
 }
 
 class Texture_Scroll_X extends Textured_Phong {
