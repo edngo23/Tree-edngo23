@@ -12,7 +12,6 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
 
-
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             cube: new Cube(),
@@ -40,8 +39,8 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         // *** Materials
         const textured = new defs.Textured_Phong(1);
         this.materials = {
-            pine_cones: new Material(new Gouraud_Shader(),
-                {ambient: .6, diffusivity: .6, color: hex_color("#6F4E37")}),
+            // pine_cones: new Material(new Gouraud_Shader(),
+            //     {ambient: .6, diffusivity: .6, color: hex_color("#6F4E37")}),
             // trunk: new Material(new Gouraud_Shader(),
             //     {ambient: .8, diffusivity: .6, color: hex_color("#ffffff")}),
             // water: new Material(new Gouraud_Shader(),
@@ -88,8 +87,8 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
 
         }
 
-        this.shapes.cone.arrays.texture_coord = this.shapes.cone.arrays.texture_coord.map(x => x.times(2));
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 40), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.shapes.cone.arrays.texture_coord = this.shapes.cone.arrays.texture_coord.map(x => x.times(2));
         this.move = false;
     }
 
@@ -117,7 +116,6 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
             const max_rot = 0.0015 * Math.PI;
             angle_of_rotation = ((max_rot/2) + ((max_rot/2) * Math.sin(1.2 * Math.PI * t)));
         }
-
 
         let j = -1;
         for (let i = 0; i < 3; i++) {
@@ -163,9 +161,6 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
     }
 
     display(context, program_state) {
-        // display():  Called once per frame of animation.
-        // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
-
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
@@ -211,14 +206,12 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
                 .times(Mat4.rotation(-0.2, 1, 0, 0))
                 .times(Mat4.scale(25, 1, 20))
             this.shapes.land.draw(context, program_state, land_transform, this.materials.land.override({color: hex_color("#000000")}));
-        }
 
-        for(let i = 0; i < 2; ++i) {
-            let land_transform = Mat4.identity();
-            land_transform = land_transform.times(Mat4.translation(-31 + (i * 62), -16, -10))
+            let land_transform2 = Mat4.identity();
+            land_transform2 = land_transform2.times(Mat4.translation(-31 + (i * 62), -16, -10))
                 .times(Mat4.rotation(-0.2, 1, 0, 0))
                 .times(Mat4.scale(25, 4, 21))
-            this.shapes.land.draw(context, program_state, land_transform, this.materials.land2.override({color: hex_color("#000000")}));
+            this.shapes.land.draw(context, program_state, land_transform2, this.materials.land2.override({color: hex_color("#000000")}));
         }
 
         //Trees on left side
@@ -244,16 +237,16 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         this.draw_tree(context, program_state,  30, -23, 5, 2.7, "#87a96b");
 
         //Pine Cones
-        this.draw_pine_cones(context, program_state, -20, -0.05, 9.2, -18, 1.5, 7.2, -20, 4.5,
-            7, 2.3, 0, 2.3, 0, 2.3, -2.3)
-        this.draw_pine_cones(context, program_state, 10, -0.3, -2.2, 6, 1.5, -3, 9, 3.5,
-            -3.5, 2.3, 0, 2.3, -2.3, 0, 2.3)
+        this.draw_pine_cones(context, program_state, -20, -0.05, 9.2, -18, 1.5, 7.2, -20, 4,
+            6.2, 2.3, 0, 2.3, 0, 2.3, -2.3)
+        this.draw_pine_cones(context, program_state, 10, -1.1, -1.1, 6, 1.5, -3, 9, 3.5,
+            -3.9, 2.3, 0, 2.3, -2.3, 0, 2.3)
         this.draw_pine_cones(context, program_state, 26, -1.5, -4.2, 31, 1, -3.5, 29.5, 3,
             -4.3, 2.3, -2, 2.3, 0, 2.3, -2.3)
         this.draw_pine_cones(context, program_state, -15, -1.8, -11, -13, 0.1, -13, -15, 2,
             -13.3, 2.3, 0, -2, -2.3, 0, 2.3)
-        this.draw_pine_cones(context, program_state, 20, -0.3, 9.2, 18, 1.5, 7.2, 20, 3.5,
-            7, 2.3, 0, 2.3, 0, 2.3, -2.3)
+        this.draw_pine_cones(context, program_state, 20, -0.05, 9.2, 18, 1.5, 7.2, 20, 3.5,
+            6.2, 2.3, 0, 2.3, 0, 2.3, -2.3)
 
         //Set up the camera
         if(this.attached) {
