@@ -79,9 +79,16 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
                 ambient: 0.5,
                 texture: new Texture("assets/pinecones.png", "LINEAR_MIPMAP_LINEAR")
             }),
+            treeleaf: new Material(new Textured_Phong(), {
+                color: hex_color("#ffffff"),
+                ambient: 0.7,
+                texture: new Texture("assets/treeleaf.png", "LINEAR_MIPMAP_LINEAR")
+            }),
+
 
         }
 
+        this.shapes.cone.arrays.texture_coord = this.shapes.cone.arrays.texture_coord.map(x => x.times(2));
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 40), vec3(0, 0, 0), vec3(0, 1, 0));
         this.move = false;
     }
@@ -118,8 +125,8 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
             cone_transform = cone_transform.times(Mat4.rotation(-1.8, 1, 0, 0))
                 .times(Mat4.rotation(angle_of_rotation * j, 0, 0, 1))
                 .times(Mat4.translation(tx, -1 * ty, treez + i * 2.25))
-                .times(Mat4.scale(5 - i, 5 - i, 2))
-            this.shapes.cone.draw(context, program_state, cone_transform, this.materials.tree.override({color: hex_color(green_shade)}));
+                .times(Mat4.scale(5 - i, 5 - i, 3))
+            this.shapes.cone.draw(context, program_state, cone_transform, this.materials.treeleaf.override({color:  hex_color("#000000")}));
             j = j*  -1;
         }
     }
@@ -130,7 +137,7 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         if(this.move){
             const t = this.t = program_state.animation_time / 1000;
             const max_rot = 0.05 * Math.PI;
-            angle_of_rotation = ((max_rot/2) + ((max_rot/2) * Math.sin(1.2 * Math.PI * t)));
+            angle_of_rotation = ((max_rot/2) + ((max_rot/2) * Math.sin(1 * Math.PI * t)));
         }
 
         let pine_transform = Mat4.identity().times(Mat4.translation(p1x, p1y, p1z))
@@ -237,7 +244,7 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         this.draw_tree(context, program_state,  30, -23, 5, 2.7, "#87a96b");
 
         //Pine Cones
-        this.draw_pine_cones(context, program_state, -20, -0.3, 9.2, -18, 1.5, 7.2, -20, 3.5,
+        this.draw_pine_cones(context, program_state, -20, -0.05, 9.2, -18, 1.5, 7.2, -20, 4.5,
             7, 2.3, 0, 2.3, 0, 2.3, -2.3)
         this.draw_pine_cones(context, program_state, 10, -0.3, -2.2, 6, 1.5, -3, 9, 3.5,
             -3.5, 2.3, 0, 2.3, -2.3, 0, 2.3)
