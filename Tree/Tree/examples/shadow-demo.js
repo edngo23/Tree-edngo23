@@ -79,18 +79,8 @@ export class Shadow_Demo extends Scene {
 
         const textured = new defs.Textured_Phong(1);
         this.materials = {
-            pine_cones: new Material(new Shadow_Textured_Phong_Shader(1),
-                {ambient: .6, diffusivity: .6, color: hex_color("#6F4E37")}),
-            trunk: new Material(new Shadow_Textured_Phong_Shader(1),
-                {ambient: .8, diffusivity: .6, color: hex_color("#5c4322")}),
-            water: new Material(new Texture_Scroll_X(), {
-                ambient: 1,
-                texture: new Texture("assets/water.png", "LINEAR_MIPMAP_LINEAR")
-            }),
             land: new Material(new Shadow_Textured_Phong_Shader(1),
-                {ambient: .7, diffusivity: 1, color: hex_color("#C19A6B")}),
-            tree: new Material(new Shadow_Textured_Phong_Shader(1),
-                {ambient: .4, diffusivity: .6, color: hex_color("#5c4322")}),
+                {ambient: .4, diffusivity: 1, color: hex_color("#6F4E37")}),
             sun: new Material(new defs.Phong_Shader(),
                 {ambient: 1, diffusivity: 1, color: hex_color("#fac91a")}),
             moon: new Material(new defs.Phong_Shader(),
@@ -109,36 +99,68 @@ export class Shadow_Demo extends Scene {
                 {ambient:1, specularity: 0.2, texture: new Texture("./assets/apocalypse.png"), color: color(0,0,0,1)}),
             night_sky: new Material(textured,
                 {ambient:1, specularity: 0.2, texture: new Texture("./assets/nightsky.png"), color: color(0,0,0,1)}),
+            land2: new Material(new Textured_Phong(), {
+                color: hex_color("#ffffff"),
+                ambient: 1,
+                texture: new Texture("assets/grass.png", "LINEAR_MIPMAP_LINEAR")
+            }),
         }
+
+        this.water = new Material(new Texture_Scroll_X(), {
+            color: hex_color("#ffffff"),
+            ambient: 1,  diffusivity: .0, specularity: .0,
+            texture: new Texture("assets/water.png", "LINEAR_MIPMAP_LINEAR")
+        })
+
+        this.land = new Material(new Shadow_Textured_Phong_Shader(1), {
+            color: color(.168, .274, .2, 1),
+            ambient:0.3,
+            color_texture: new Texture("assets/grass.png"),
+            light_depth_texture: null
+        })
+
+        this.land2 = new Material(new Shadow_Textured_Phong_Shader(1), {
+            color: color(.203, .152, .117, 1),
+            ambient: .4, diffusivity: .5, specularity: .5,
+            color_texture: new Texture("assets/land1.jpg"),
+            light_depth_texture: null
+        })
+
+        this.treeleaf = new Material(new Shadow_Textured_Phong_Shader(1), {
+            color: color(.125, .180, .168, 1),
+            ambient: .4, diffusivity: .5, specularity: .2,
+            color_texture: new Texture("assets/treeleaf.png", "LINEAR_MIPMAP_LINEAR"),
+            light_depth_texture: null
+        })
+
+        this.trunk = new Material(new Shadow_Textured_Phong_Shader(1), {
+            color: color(.403, .301, .211, 1),
+            ambient: .4, diffusivity: .5, specularity: .5,
+            color_texture: new Texture("assets/trunk.jpg", "LINEAR_MIPMAP_LINEAR"),
+            light_depth_texture: null
+        })
+
+        this.pinecones = new Material(new Shadow_Textured_Phong_Shader(1), {
+            color: color(.1, .145, .105, 1),
+            ambient: .4, diffusivity: .5, specularity: .5,
+            color_texture: new Texture("assets/pinecones.png", "LINEAR_MIPMAP_LINEAR"),
+            light_depth_texture: null
+        })
 
         // To make sure texture initialization only does once
         this.init_ok = false;
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 40), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.shapes.cone.arrays.texture_coord = this.shapes.cone.arrays.texture_coord.map(x => x.times(2));
         this.previousShadeSwitchTime = 0.0;
         this.shadeSwitch = false;
         this.night_time = false;
         this.previousX = 0;
         this.season = 0;
+        this.move = false;
     }
 
     make_control_panel() {
         // // make_control_panel(): Sets up a panel of interactive HTML elements, including
-        // // buttons with key bindings for affecting this scene, and live info readouts.
-        // this.control_panel.innerHTML += "Dragonfly rotation angle: ";
-        // // The next line adds a live text readout of a data member of our Scene.
-        // this.live_string(box => {
-        //     box.textContent = (this.hover ? 0 : (this.t % (2 * Math.PI)).toFixed(2)) + " radians"
-        // });
-        // this.new_line();
-        // this.new_line();
-        // // Add buttons so the user can actively toggle data members of our Scene:
-        // this.key_triggered_button("Hover dragonfly in place", ["h"], function () {
-        //     this.hover ^= 1;
-        // });
-        // this.new_line();
-        // this.key_triggered_button("Swarm mode", ["m"], function () {
-        //     this.swarm ^= 1;
-        // });
         this.key_triggered_button("Reset Camera", ["Control", "0"], () => this.attached = () => this.initial_camera_location);
         this.new_line();
         this.key_triggered_button("Attach to tree", ["Control", "1"], () => this.attached = () => null);
@@ -148,6 +170,9 @@ export class Shadow_Demo extends Scene {
         this.key_triggered_button("Fall", ["Control", "4"], () => {this.season = 2;});
         this.key_triggered_button("Winter", ["Control", "5"], () => {this.season = 3;});
         this.key_triggered_button("Apocalypse", ["Control", "6"], () => {this.season = 4;});
+        this.key_triggered_button("Move Trees", ["m"], () => {
+            this.move = !this.move;
+        });
     }
 
     draw_tree(context, program_state, tx, ty, tz, treez, green_shade, shadow){
@@ -155,35 +180,56 @@ export class Shadow_Demo extends Scene {
         trunk_transform = trunk_transform.times(Mat4.rotation(1.4, 1, 0, 0))
             .times(Mat4.translation(tx, ty, tz))
             .times(Mat4.scale(1, 1, 11))
-        this.shapes.cylinder.draw(context, program_state, trunk_transform, shadow? this.materials.trunk : this.pure);
+        this.shapes.cylinder.draw(context, program_state, trunk_transform, shadow ? this.trunk : this.pure);
 
+        let angle_of_rotation = 0;
+        if(this.move){
+            const t = this.t = program_state.animation_time / 1000;
+            const max_rot = 0.0015 * Math.PI;
+            angle_of_rotation = ((max_rot/2) + ((max_rot/2) * Math.sin(1.1 * Math.PI * t)));
+        }
+
+        let j = -1;
         for (let i = 0; i < 3; i++) {
             let cone_transform = Mat4.identity();
             cone_transform = cone_transform.times(Mat4.rotation(-1.8, 1, 0, 0))
+                .times(Mat4.rotation(angle_of_rotation * j, 0, 0, 1))
                 .times(Mat4.translation(tx, -1 * ty, treez + i * 2.25))
-                .times(Mat4.scale(5 - i, 5 - i, 2))
-            this.shapes.cone.draw(context, program_state, cone_transform, shadow? this.materials.tree.override({color: hex_color(green_shade)}) : this.pure);
+                .times(Mat4.scale(5 - i, 5 - i, 3))
+            this.shapes.cone.draw(context, program_state, cone_transform, shadow ? this.treeleaf : this.pure);
+            j = j*  -1;
         }
     }
 
     draw_pine_cones(context, program_state, p1x, p1y, p1z, p2x, p2y, p2z, p3x, p3y, p3z, p1angle1, p1angle2, p2angle1, p2angle2, p3angle1, p3angle2){
+        let angle_of_rotation = 0;
+
+        if(this.move){
+            const t = this.t = program_state.animation_time / 1000;
+            const max_rot = 0.05 * Math.PI;
+            angle_of_rotation = ((max_rot/2) + ((max_rot/2) * Math.sin(1 * Math.PI * t)));
+        }
+
         let pine_transform = Mat4.identity().times(Mat4.translation(p1x, p1y, p1z))
             .times(Mat4.rotation(p1angle1, 1, 0, 0))
             .times(Mat4.rotation(p1angle2, 1, 0, 0))
-            .times(Mat4.scale(0.45, 0.6,0.35));
-        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pine_cones);
+            .times(Mat4.rotation(angle_of_rotation, 0, 0, 1))
+            .times(Mat4.scale(0.55, 0.7,0.45));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.pinecones);
 
         pine_transform = Mat4.identity().times(Mat4.translation(p2x, p2y, p2z))
             .times(Mat4.rotation(p2angle1, 1, 0, 0))
             .times(Mat4.rotation(p2angle2, 1, 0, 0))
-            .times(Mat4.scale(0.45, 0.6,0.35));
-        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pine_cones);
+            .times(Mat4.rotation(angle_of_rotation * -1, 0, 0, 1))
+            .times(Mat4.scale(0.55, 0.7,0.45));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.pinecones);
 
         pine_transform = Mat4.identity().times(Mat4.translation(p3x, p3y, p3z))
             .times(Mat4.rotation(p3angle1, 0, 1, 0))
             .times(Mat4.rotation(p3angle2, 1, 0, 0))
-            .times(Mat4.scale(0.45, 0.6,0.35));
-        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pine_cones);
+            .times(Mat4.rotation(angle_of_rotation, 0, 0, 1))
+            .times(Mat4.scale(0.55, 0.7,0.45));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.pinecones);
     }
 
     texture_buffer_init(gl) {
@@ -301,16 +347,29 @@ export class Shadow_Demo extends Scene {
             .times(Mat4.rotation(-0.2, 1, 0, 0))
             .times(Mat4.rotation(3.14, 0, 1, 0))
             .times(Mat4.scale(50, 4, 20))
-        this.shapes.cube.draw(context, program_state, water_transform, shadow_pass? this.materials.water : this.pure);
+        this.shapes.cube.draw(context, program_state, water_transform, shadow_pass? this.water.override({color: hex_color("#000000")}) : this.pure);
 
         //Land
+        let land_transform = Mat4.identity();
+        land_transform = land_transform.times(Mat4.translation(0, -23, -10))
+                .times(Mat4.rotation(-0.2, 1, 0, 0))
+                .times(Mat4.scale(200, 0.5, 20))
+        this.shapes.cube.draw(context, program_state, land_transform, shadow_pass? this.materials.land : this.pure);
+
         for(let i = 0; i < 2; ++i) {
             let land_transform = Mat4.identity();
             land_transform = land_transform.times(Mat4.translation(-31 + (i * 62), -15, -10))
                 .times(Mat4.rotation(-0.2, 1, 0, 0))
                 .times(Mat4.scale(25, 5, 20))
-            this.shapes.cube.draw(context, program_state, land_transform, shadow_pass? this.materials.land : this.pure);
+            this.shapes.cube.draw(context, program_state, land_transform, this.land)
+
+            let land_transform2 = Mat4.identity();
+            land_transform2 = land_transform2.times(Mat4.translation(-31 + (i * 62), -16, -10))
+                .times(Mat4.rotation(-0.2, 1, 0, 0))
+                .times(Mat4.scale(25, 4, 20.5))
+            this.shapes.cube.draw(context, program_state, land_transform2, this.land2);
         }
+
 
         //Trees on left side
         this.draw_tree(context, program_state, -20, 5, 5, -1.5, "#355E3B", shadow_pass);
@@ -335,16 +394,16 @@ export class Shadow_Demo extends Scene {
         this.draw_tree(context, program_state,  30, -23, 5, 2.7, "#87a96b", shadow_pass);
 
         //Pine Cones
-        this.draw_pine_cones(context, program_state, -20, -0.3, 9.2, -18, 1.5, 7.2, -20, 3.5,
-            7, 2.3, 0, 2.3, 0, 2.3, -2.3)
-        this.draw_pine_cones(context, program_state, 10, -0.3, -2.2, 6, 1.5, -3, 9, 3.5,
-            -3.5, 2.3, 0, 2.3, -2.3, 0, 2.3)
+        this.draw_pine_cones(context, program_state, -20, -0.05, 9.2, -18, 1.5, 7.2, -20, 4,
+            6.2, 2.3, 0, 2.3, 0, 2.3, -2.3)
+        this.draw_pine_cones(context, program_state, 10, -1.1, -1.1, 6, 1.5, -3, 9, 3.5,
+            -3.9, 2.3, 0, 2.3, -2.3, 0, 2.3)
         this.draw_pine_cones(context, program_state, 26, -1.5, -4.2, 31, 1, -3.5, 29.5, 3,
             -4.3, 2.3, -2, 2.3, 0, 2.3, -2.3)
         this.draw_pine_cones(context, program_state, -15, -1.8, -11, -13, 0.1, -13, -15, 2,
             -13.3, 2.3, 0, -2, -2.3, 0, 2.3)
-        this.draw_pine_cones(context, program_state, 20, -0.3, 9.2, 18, 1.5, 7.2, 20, 3.5,
-            7, 2.3, 0, 2.3, 0, 2.3, -2.3)
+        this.draw_pine_cones(context, program_state, 20, -0.05, 9.2, 18, 1.5, 7.2, 20, 3.5,
+            6.2, 2.3, 0, 2.3, 0, 2.3, -2.3)
     }
 
     display(context, program_state) {
