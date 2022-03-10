@@ -16,6 +16,8 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             cube: new Cube(),
+            water: new Cube(),
+            land: new Cube(),
             torus: new defs.Torus(15, 15),
             torus2: new defs.Torus(3, 15),
             sphere4: new defs.Subdivision_Sphere(4),
@@ -40,12 +42,10 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         this.materials = {
             pine_cones: new Material(new Gouraud_Shader(),
                 {ambient: .6, diffusivity: .6, color: hex_color("#6F4E37")}),
-            trunk: new Material(new Gouraud_Shader(),
-                {ambient: .8, diffusivity: .6, color: hex_color("#ffffff")}),
-            water: new Material(new Gouraud_Shader(),
-                {ambient: .8, diffusivity: .6, color: hex_color("#ffffff")}),
-            land: new Material(new Gouraud_Shader(),
-                {ambient: .7, diffusivity: 1, color: hex_color("#ffffff")}),
+            // trunk: new Material(new Gouraud_Shader(),
+            //     {ambient: .8, diffusivity: .6, color: hex_color("#ffffff")}),
+            // water: new Material(new Gouraud_Shader(),
+            //     {ambient: .8, diffusivity: .6, color: hex_color("#ffffff")}),
             tree: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
             sun: new Material(new defs.Phong_Shader(),
@@ -54,9 +54,36 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
                 {ambient:1, specularity: 0.2, texture: new Texture("assets/sunsetBackgroundSquare.png"), color: color(0,0,0,1)}),
             ground: new Material(textured,
                 {ambient:1, specularity: 0.2, texture: new Texture("assets/groundSquare.png")}),
+            water: new Material(new Texture_Scroll_X(), {
+                color: hex_color("#ffffff"),
+                ambient: 1,
+                texture: new Texture("assets/water.png", "LINEAR_MIPMAP_LINEAR")
+            }),
+            land: new Material(new Textured_Phong(), {
+                color: hex_color("#ffffff"),
+                ambient: 1,
+                texture: new Texture("assets/grass.png", "LINEAR_MIPMAP_LINEAR")
+            }),
+            land2: new Material(new Textured_Phong(), {
+                color: hex_color("#ffffff"),
+                ambient: 1,
+                texture: new Texture("assets/land1.jpg", "LINEAR_MIPMAP_LINEAR")
+            }),
+            trunk: new Material(new Textured_Phong(), {
+                color: hex_color("#ffffff"),
+                ambient: 0.8,
+                texture: new Texture("assets/trunk.jpg", "LINEAR_MIPMAP_LINEAR")
+            }),
+            pinecones: new Material(new Textured_Phong(), {
+                color: hex_color("#ffffff"),
+                ambient: 0.5,
+                texture: new Texture("assets/pinecones.png", "LINEAR_MIPMAP_LINEAR")
+            }),
+
         }
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 40), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.move = false;
     }
 
     make_control_panel() {
@@ -64,6 +91,10 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         this.key_triggered_button("Reset Camera", ["Control", "0"], () => this.attached = () => this.initial_camera_location);
         this.new_line();
         this.key_triggered_button("Attach to tree", ["Control", "1"], () => this.attached = () => null);
+        this.key_triggered_button("Move Trees", ["m"], () => {
+            // TODO:  Requirement 3d:  Set a flag here that will toggle your swaying motion on and off.
+            this.move = !this.move;
+        });
     }
 
     draw_tree(context, program_state, tx, ty, tz, treez, green_shade){
@@ -71,35 +102,57 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         trunk_transform = trunk_transform.times(Mat4.rotation(1.4, 1, 0, 0))
             .times(Mat4.translation(tx, ty, tz))
             .times(Mat4.scale(1, 1, 11))
-        this.shapes.cylinder.draw(context, program_state, trunk_transform, this.materials.trunk.override({color:  hex_color("#5c4322")}));
+        this.shapes.cylinder.draw(context, program_state, trunk_transform, this.materials.trunk.override({color:  hex_color("#000000")}));
 
+        let angle_of_rotation = 0;
+        if(this.move){
+            const t = this.t = program_state.animation_time / 1000;
+            const max_rot = 0.0015 * Math.PI;
+            angle_of_rotation = ((max_rot/2) + ((max_rot/2) * Math.sin(1.2 * Math.PI * t)));
+        }
+
+
+        let j = -1;
         for (let i = 0; i < 3; i++) {
             let cone_transform = Mat4.identity();
             cone_transform = cone_transform.times(Mat4.rotation(-1.8, 1, 0, 0))
+                .times(Mat4.rotation(angle_of_rotation * j, 0, 0, 1))
                 .times(Mat4.translation(tx, -1 * ty, treez + i * 2.25))
                 .times(Mat4.scale(5 - i, 5 - i, 2))
             this.shapes.cone.draw(context, program_state, cone_transform, this.materials.tree.override({color: hex_color(green_shade)}));
+            j = j*  -1;
         }
     }
 
     draw_pine_cones(context, program_state, p1x, p1y, p1z, p2x, p2y, p2z, p3x, p3y, p3z, p1angle1, p1angle2, p2angle1, p2angle2, p3angle1, p3angle2){
+        let angle_of_rotation = 0;
+
+        if(this.move){
+            const t = this.t = program_state.animation_time / 1000;
+            const max_rot = 0.05 * Math.PI;
+            angle_of_rotation = ((max_rot/2) + ((max_rot/2) * Math.sin(1.2 * Math.PI * t)));
+        }
+
         let pine_transform = Mat4.identity().times(Mat4.translation(p1x, p1y, p1z))
             .times(Mat4.rotation(p1angle1, 1, 0, 0))
             .times(Mat4.rotation(p1angle2, 1, 0, 0))
-            .times(Mat4.scale(0.45, 0.6,0.35));
-        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pine_cones);
+            .times(Mat4.rotation(angle_of_rotation, 0, 0, 1))
+            .times(Mat4.scale(0.55, 0.7,0.45));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pinecones.override({color:  hex_color("#000000")}));
 
         pine_transform = Mat4.identity().times(Mat4.translation(p2x, p2y, p2z))
             .times(Mat4.rotation(p2angle1, 1, 0, 0))
             .times(Mat4.rotation(p2angle2, 1, 0, 0))
-            .times(Mat4.scale(0.45, 0.6,0.35));
-        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pine_cones);
+            .times(Mat4.rotation(angle_of_rotation * -1, 0, 0, 1))
+            .times(Mat4.scale(0.55, 0.7,0.45));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pinecones.override({color:  hex_color("#000000")}));
 
         pine_transform = Mat4.identity().times(Mat4.translation(p3x, p3y, p3z))
             .times(Mat4.rotation(p3angle1, 0, 1, 0))
             .times(Mat4.rotation(p3angle2, 1, 0, 0))
-            .times(Mat4.scale(0.45, 0.6,0.35));
-        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pine_cones);
+            .times(Mat4.rotation(angle_of_rotation, 0, 0, 1))
+            .times(Mat4.scale(0.55, 0.7,0.45));
+        this.shapes.pine_cones.draw(context, program_state, pine_transform, this.materials.pinecones.override({color:  hex_color("#000000")}));
     }
 
     display(context, program_state) {
@@ -140,16 +193,25 @@ export class Tree extends Scene { //Should be Scene for Assignment 3
         let water_transform = Mat4.identity();
         water_transform = water_transform.times(Mat4.translation(0, -16, -10))
             .times(Mat4.rotation(-0.2, 1, 0, 0))
+            .times(Mat4.rotation(3.14, 0, 1, 0))
             .times(Mat4.scale(50, 4, 20))
-        this.shapes.cube.draw(context, program_state, water_transform, this.materials.water.override({color: hex_color("#1ca3ec")}));
+        this.shapes.water.draw(context, program_state, water_transform, this.materials.water.override({color: hex_color("#000000")}));
 
         //Land
         for(let i = 0; i < 2; ++i) {
             let land_transform = Mat4.identity();
-            land_transform = land_transform.times(Mat4.translation(-31 + (i * 62), -15, -10))
+            land_transform = land_transform.times(Mat4.translation(-31 + (i * 62), -12, -10))
                 .times(Mat4.rotation(-0.2, 1, 0, 0))
-                .times(Mat4.scale(25, 5, 20))
-            this.shapes.cube.draw(context, program_state, land_transform, this.materials.land.override({color: hex_color("#C19A6B")}));
+                .times(Mat4.scale(25, 1, 20))
+            this.shapes.land.draw(context, program_state, land_transform, this.materials.land.override({color: hex_color("#000000")}));
+        }
+
+        for(let i = 0; i < 2; ++i) {
+            let land_transform = Mat4.identity();
+            land_transform = land_transform.times(Mat4.translation(-31 + (i * 62), -16, -10))
+                .times(Mat4.rotation(-0.2, 1, 0, 0))
+                .times(Mat4.scale(25, 4, 21))
+            this.shapes.land.draw(context, program_state, land_transform, this.materials.land2.override({color: hex_color("#000000")}));
         }
 
         //Trees on left side
@@ -412,3 +474,24 @@ class Ring_Shader extends Shader {
     }
 }
 
+class Texture_Scroll_X extends Textured_Phong {
+    // TODO:  Modify the shader below (right now it's just the same fragment shader as Textured_Phong) for requirement #6.
+    fragment_glsl_code() {
+        return this.shared_glsl_code() + `
+            varying vec2 f_tex_coord;
+            uniform sampler2D texture;
+            uniform float animation_time;
+            
+            void main(){
+                float shift = mod(animation_time, 8.0) * 0.07;
+                vec4 tex_color = texture2D( texture, f_tex_coord + vec2(0, shift));
+                
+     
+                if( tex_color.w < .01 ) discard;
+                                                                         // Compute an initial (ambient) color:
+                gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
+                                                                         // Compute the final color with contributions from lights:
+                gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
+        } `;
+    }
+}
