@@ -427,6 +427,14 @@ export class Tree extends Scene {
         }
     }
 
+    // Display description of project in index.html
+    show_explanation(document_element) {
+        document_element.innerHTML += `<p>Final project for CS 174A, Introduction to Computer Graphics, UCLA WINTER 2022
+                                     </p><p>Created by Aditya Mishra, Ethan Ngo, Jillian Pantig
+                                     </p><p>We have a day and night cycle, as well as season changes. The yellow sun is present in the day and the white moon is present in the night. The light from both bodies cast shadows on the ground from the trees. By clicking on a button, Seasons change. Rain is working in another file but unfortunately we were unable to incorporate it into the scene. 
+                                     </p><p>Please feel free to modify and replicate our code here: https://github.com/pjil127/Tree </p>`;
+    }
+
 }
 
 class Texture_Scroll_X extends Textured_Phong {
