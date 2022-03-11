@@ -27,8 +27,8 @@ We will have a day and night cycle, as well as season changes. If time permits, 
 2. Open with WebStorm or your preferred web development IDE.
 3. Run index.html.
 4. Using the buttons on the dashboard or the keys mapped to specific actions, you can:
-   a. Move the camera around with 'W', 'A', 'S', 'D', 'Z', space, ',', or '.' and click and drag to turn the camera.
-   b. Reset the camera.
-   c. Attach to a specified tree.
-   d. Change the season during day time.
-   e. Make the trees sway slightly with 'M'.
+   * Move the camera around with 'W', 'A', 'S', 'D', 'Z', space, ',', or '.' and click and drag to turn the camera.
+   * Reset the camera.
+   * Attach to a specified tree.
+   * Change the season during day time.
+   * Make the trees sway slightly with 'M'.
